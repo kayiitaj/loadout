@@ -221,6 +221,20 @@
     }
     @keyframes _spin { to { transform:rotate(360deg); } }
 
+    /* LOADING OVERLAY */
+    .loading-overlay {
+      display:none; position:fixed; inset:0; background:rgba(15,15,15,0.7);
+      z-index:400; align-items:center; justify-content:center; flex-direction:column; gap:12px;
+    }
+    .loading-overlay.active { display:flex; }
+    .loading-spinner {
+      width:28px; height:28px; border:3px solid var(--border2); border-top-color:var(--amber);
+      border-radius:50%; animation:_spin 0.7s linear infinite;
+    }
+    .loading-text {
+      font-size:0.6rem; letter-spacing:0.16em; text-transform:uppercase; color:var(--muted2);
+    }
+
     .empty { padding:28px 16px; font-size:0.68rem; color:var(--muted); letter-spacing:0.06em; }
     .gap   { height:100px; }
     .mt8   { margin-top:8px; }
@@ -375,6 +389,10 @@
   </div>
 </div>
 
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">Loading...</div>
+</div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -434,13 +452,15 @@ async function saveOnboard() {
   const bw   = parseFloat(document.getElementById('obBW').value);
   if (!name || isNaN(age) || isNaN(bw)) { toast('Fill all fields', 'err'); return; }
 
-  const { error } = await sb.from('profiles').insert({ id: S.user.id, name, age, bw });
-  if (error) { toast('Save error: ' + error.message, 'err'); return; }
+  await withLoading(async () => {
+    const { error } = await sb.from('profiles').insert({ id: S.user.id, name, age, bw });
+    if (error) { toast('Save error: ' + error.message, 'err'); return; }
 
-  S.profile = { name, age, bw };
-  await loadData();
-  show('s-app');
-  updateHeader();
+    S.profile = { name, age, bw };
+    await loadData();
+    show('s-app');
+    updateHeader();
+  }, 'Setting up...');
 }
 
 // ══════════════════════════════════════════════════════════
@@ -459,13 +479,15 @@ async function saveProfile() {
   const bw   = parseFloat(document.getElementById('profBW').value);
   if (!name || isNaN(age) || isNaN(bw)) { toast('Fill all fields', 'err'); return; }
 
-  const { error } = await sb.from('profiles').upsert({ id: S.user.id, name, age, bw });
-  if (error) { toast('Error: ' + error.message, 'err'); return; }
+  await withLoading(async () => {
+    const { error } = await sb.from('profiles').upsert({ id: S.user.id, name, age, bw });
+    if (error) { toast('Error: ' + error.message, 'err'); return; }
 
-  S.profile = { name, age, bw };
-  updateHeader();
-  closeModal('m-profile');
-  toast('Saved', 'ok');
+    S.profile = { name, age, bw };
+    updateHeader();
+    closeModal('m-profile');
+    toast('Saved', 'ok');
+  }, 'Saving...');
 }
 
 function updateHeader() {
@@ -529,24 +551,26 @@ async function saveWorkout() {
 
   if (!valid || exercises.length === 0) { toast('Complete all exercise fields', 'err'); return; }
 
-  // Insert workout
-  const { data: wk, error: wkErr } = await sb.from('workouts')
-    .insert({ user_id: S.user.id, name })
-    .select().single();
-  if (wkErr) { toast('Error: ' + wkErr.message, 'err'); return; }
+  await withLoading(async () => {
+    // Insert workout
+    const { data: wk, error: wkErr } = await sb.from('workouts')
+      .insert({ user_id: S.user.id, name })
+      .select().single();
+    if (wkErr) { toast('Error: ' + wkErr.message, 'err'); return; }
 
-  // Insert exercises
-  const exRows = exercises.map((e, idx) => ({ ...e, workout_id: wk.id, user_id: S.user.id, sort_order: idx }));
-  const { error: exErr } = await sb.from('exercises').insert(exRows);
-  if (exErr) { toast('Error: ' + exErr.message, 'err'); return; }
+    // Insert exercises
+    const exRows = exercises.map((e, idx) => ({ ...e, workout_id: wk.id, user_id: S.user.id, sort_order: idx }));
+    const { error: exErr } = await sb.from('exercises').insert(exRows);
+    if (exErr) { toast('Error: ' + exErr.message, 'err'); return; }
 
-  await loadWorkouts();
-  renderWorkouts();
-  closeModal('m-new-workout');
-  document.getElementById('wkName').value = '';
-  document.getElementById('exFields').innerHTML = '';
-  exCount = 0;
-  toast('Workout saved', 'ok');
+    await loadWorkouts();
+    renderWorkouts();
+    closeModal('m-new-workout');
+    document.getElementById('wkName').value = '';
+    document.getElementById('exFields').innerHTML = '';
+    exCount = 0;
+    toast('Workout saved', 'ok');
+  }, 'Saving workout...');
 }
 
 function renderWorkouts() {
@@ -893,6 +917,22 @@ document.querySelectorAll('.overlay').forEach(o => {
   o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
 });
 
+// Loading overlay — only shows if operation takes >200ms
+let _loadTimer = null;
+function showLoading(msg = 'Loading...') {
+  const el = document.getElementById('loadingOverlay');
+  el.querySelector('.loading-text').textContent = msg;
+  _loadTimer = setTimeout(() => el.classList.add('active'), 200);
+}
+function hideLoading() {
+  clearTimeout(_loadTimer);
+  document.getElementById('loadingOverlay').classList.remove('active');
+}
+async function withLoading(fn, msg) {
+  showLoading(msg);
+  try { return await fn(); } finally { hideLoading(); }
+}
+
 let _tt;
 function toast(msg, type = '') {
   const t = document.getElementById('toast');
@@ -906,26 +946,31 @@ function isoDate(d) { return d.toISOString().split('T')[0]; }
 // INIT — Supabase handles the magic link redirect automatically
 // ══════════════════════════════════════════════════════════
 (async () => {
+  showLoading('Loading...');
   const { data: { session } } = await sb.auth.getSession();
 
   if (session?.user) {
     S.user    = session.user;
     S.profile = await loadProfile();
-    if (!S.profile) { show('s-onboard'); return; }
+    if (!S.profile) { hideLoading(); show('s-onboard'); return; }
     await loadData();
+    hideLoading();
     show('s-app');
     updateHeader();
   } else {
+    hideLoading();
     show('s-login');
   }
 
   // Listen for auth state changes (magic link click lands here)
   sb.auth.onAuthStateChange(async (event, session) => {
     if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
+      showLoading('Loading...');
       S.user    = session.user;
       S.profile = await loadProfile();
-      if (!S.profile) { show('s-onboard'); return; }
+      if (!S.profile) { hideLoading(); show('s-onboard'); return; }
       await loadData();
+      hideLoading();
       show('s-app');
       updateHeader();
     }
