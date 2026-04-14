@@ -1264,15 +1264,16 @@ function isoDate(d) { return d.toISOString().split('T')[0]; }
 
   // Listen for auth state changes (magic link click lands here)
   sb.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'TOKEN_REFRESHED' && session?.user) {
-      // Silent refresh — update token, don't disrupt the UI
+    if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
       S.user = session.user;
-      return;
-    }
-    if (event === 'SIGNED_IN' && session?.user) {
+      // Already loaded — silently refresh data, don't disrupt UI
+      if (S.profile) {
+        loadData().catch(() => {});
+        return;
+      }
+      // First sign-in: full load flow
       showLoading('Loading...');
       try {
-        S.user    = session.user;
         S.profile = await loadProfile();
         if (!S.profile) { show('s-onboard'); return; }
         await loadData();
