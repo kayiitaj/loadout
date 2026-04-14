@@ -1242,32 +1242,47 @@ function isoDate(d) { return d.toISOString().split('T')[0]; }
 // ══════════════════════════════════════════════════════════
 (async () => {
   showLoading('Loading...');
-  const { data: { session } } = await sb.auth.getSession();
+  try {
+    const { data: { session } } = await sb.auth.getSession();
 
-  if (session?.user) {
-    S.user    = session.user;
-    S.profile = await loadProfile();
-    if (!S.profile) { hideLoading(); show('s-onboard'); return; }
-    await loadData();
-    hideLoading();
-    show('s-app');
-    updateHeader();
-  } else {
-    hideLoading();
+    if (session?.user) {
+      S.user    = session.user;
+      S.profile = await loadProfile();
+      if (!S.profile) { show('s-onboard'); return; }
+      await loadData();
+      show('s-app');
+      updateHeader();
+    } else {
+      show('s-login');
+    }
+  } catch (e) {
+    toast('Load error: ' + e.message, 'err');
     show('s-login');
+  } finally {
+    hideLoading();
   }
 
   // Listen for auth state changes (magic link click lands here)
   sb.auth.onAuthStateChange(async (event, session) => {
-    if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
+    if (event === 'TOKEN_REFRESHED' && session?.user) {
+      // Silent refresh — update token, don't disrupt the UI
+      S.user = session.user;
+      return;
+    }
+    if (event === 'SIGNED_IN' && session?.user) {
       showLoading('Loading...');
-      S.user    = session.user;
-      S.profile = await loadProfile();
-      if (!S.profile) { hideLoading(); show('s-onboard'); return; }
-      await loadData();
-      hideLoading();
-      show('s-app');
-      updateHeader();
+      try {
+        S.user    = session.user;
+        S.profile = await loadProfile();
+        if (!S.profile) { show('s-onboard'); return; }
+        await loadData();
+        show('s-app');
+        updateHeader();
+      } catch (e) {
+        toast('Load error: ' + e.message, 'err');
+      } finally {
+        hideLoading();
+      }
     }
     if (event === 'SIGNED_OUT') { show('s-login'); }
   });
