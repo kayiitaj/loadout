@@ -104,8 +104,31 @@
     }
     .card:hover { border-color:var(--border2); }
     .card-head { display:flex; justify-content:space-between; align-items:center; padding:12px 14px 8px; }
+    .card-left { display:flex; flex-direction:column; flex:1; min-width:0; }
     .card-name { font-size:0.85rem; font-weight:500; text-transform:uppercase; letter-spacing:0.06em; }
     .card-meta { font-size:0.6rem; color:var(--muted); }
+    .card-menu-wrap { position:relative; }
+    .card-menu-btn {
+      background:none; border:none; color:var(--muted); cursor:pointer;
+      font-size:1.2rem; padding:4px 8px; line-height:1; letter-spacing:2px;
+    }
+    .card-menu-btn:hover { color:var(--white); }
+    .card-menu {
+      display:none; position:absolute; right:0; top:100%; z-index:60;
+      background:var(--surface); border:1px solid var(--border2); border-radius:2px;
+      min-width:140px; overflow:hidden;
+    }
+    .card-menu.open { display:block; }
+    .card-menu-item {
+      display:block; width:100%; text-align:left; padding:10px 14px;
+      font-family:var(--font); font-size:0.6rem; letter-spacing:0.12em; text-transform:uppercase;
+      color:var(--muted2); background:none; border:none; cursor:pointer;
+      border-bottom:1px solid var(--border);
+    }
+    .card-menu-item:last-child { border-bottom:none; }
+    .card-menu-item:hover { color:var(--white); background:var(--surface2); }
+    .card-menu-item.danger { color:var(--red); }
+    .card-menu-item.danger:hover { background:rgba(192,57,43,0.1); }
     .card-chips { display:flex; flex-wrap:wrap; gap:5px; padding:0 14px 12px; }
     .chip {
       font-size:0.55rem; letter-spacing:0.1em; text-transform:uppercase;
@@ -371,6 +394,25 @@
   </div>
 </div>
 
+<!-- Edit Workout -->
+<div class="overlay" id="m-edit-workout">
+  <div class="modal">
+    <div class="modal-top">
+      <span class="modal-title">Edit Workout</span>
+      <button class="modal-close" onclick="closeModal('m-edit-workout')">×</button>
+    </div>
+    <div class="field">
+      <label>Workout Name</label>
+      <input class="finput upper" type="text" id="editWkName" autocorrect="off"/>
+    </div>
+    <div class="divider"></div>
+    <div style="font-size:0.56rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Exercises</div>
+    <div id="editExFields"></div>
+    <button class="btn btn-ghost btn-full" style="margin-bottom:12px" onclick="addEditExField()">+ Add Exercise</button>
+    <button class="btn btn-primary" onclick="updateWorkout()">Save Changes</button>
+  </div>
+</div>
+
 <!-- Profile -->
 <div class="overlay" id="m-profile">
   <div class="modal">
@@ -573,6 +615,125 @@ async function saveWorkout() {
   }, 'Saving workout...');
 }
 
+// ══════════════════════════════════════════════════════════
+// EDIT / DELETE WORKOUTS
+// ══════════════════════════════════════════════════════════
+let _openMenu = null;
+function toggleCardMenu(id) {
+  const menu = document.getElementById('cmenu-' + id);
+  if (_openMenu && _openMenu !== menu) _openMenu.classList.remove('open');
+  menu.classList.toggle('open');
+  _openMenu = menu.classList.contains('open') ? menu : null;
+}
+document.addEventListener('click', () => {
+  if (_openMenu) { _openMenu.classList.remove('open'); _openMenu = null; }
+});
+
+let editExCount = 0;
+let editWorkoutId = null;
+
+function addEditExField(ex = null) {
+  const i = editExCount++;
+  const div = document.createElement('div');
+  div.className = 'ex-field-block';
+  div.id = 'eexf-' + i;
+  div.innerHTML = `
+    <div class="ex-field-top">
+      <span class="ex-field-label">Exercise ${i + 1}</span>
+      <button class="ex-remove" onclick="document.getElementById('eexf-${i}').remove()">×</button>
+    </div>
+    <div class="field" style="margin-bottom:8px">
+      <input class="finput upper" type="text" id="een-${i}" placeholder="BACK SQUAT" autocorrect="off" value="${ex?.name||''}"/>
+    </div>
+    <div class="row3">
+      <div class="field mb0">
+        <label class="flabel">Sets</label>
+        <input class="finput" type="number" id="ees-${i}" placeholder="3" inputmode="numeric" value="${ex?.sets||''}"/>
+      </div>
+      <div class="field mb0">
+        <label class="flabel">Reps</label>
+        <input class="finput" type="number" id="eer-${i}" placeholder="5" inputmode="numeric" value="${ex?.reps||''}"/>
+      </div>
+      <div class="field mb0">
+        <label class="flabel">Weight</label>
+        <input class="finput" type="number" id="eew-${i}" placeholder="135" inputmode="decimal" value="${ex?.current_weight||ex?.start_weight||''}"/>
+      </div>
+    </div>
+  `;
+  document.getElementById('editExFields').appendChild(div);
+}
+
+function openEditWorkout(id) {
+  const w = S.workouts.find(x => x.id === id);
+  if (!w) return;
+  if (_openMenu) { _openMenu.classList.remove('open'); _openMenu = null; }
+  editWorkoutId = id;
+  editExCount = 0;
+  document.getElementById('editWkName').value = w.name;
+  document.getElementById('editExFields').innerHTML = '';
+  (w.exercises || []).forEach(ex => addEditExField(ex));
+  openModal('m-edit-workout');
+}
+
+async function updateWorkout() {
+  const name = document.getElementById('editWkName').value.trim().toUpperCase();
+  if (!name) { toast('Enter a workout name', 'err'); return; }
+
+  const inputs = document.querySelectorAll('[id^="een-"]');
+  const exercises = [];
+  let valid = true;
+
+  inputs.forEach(inp => {
+    const i  = inp.id.split('-')[1];
+    const nm = (document.getElementById('een-' + i)?.value || '').trim().toUpperCase();
+    const s  = parseInt(document.getElementById('ees-' + i)?.value);
+    const r  = parseInt(document.getElementById('eer-' + i)?.value);
+    const w  = parseFloat(document.getElementById('eew-' + i)?.value);
+    if (!nm || isNaN(s) || isNaN(r) || isNaN(w)) { valid = false; return; }
+    exercises.push({ name: nm, sets: s, reps: r, start_weight: w, current_weight: w });
+  });
+
+  if (!valid || exercises.length === 0) { toast('Complete all exercise fields', 'err'); return; }
+
+  await withLoading(async () => {
+    // Update workout name
+    const { error: wkErr } = await sb.from('workouts').update({ name }).eq('id', editWorkoutId);
+    if (wkErr) { toast('Error: ' + wkErr.message, 'err'); return; }
+
+    // Delete old exercises and insert new ones
+    const { error: delErr } = await sb.from('exercises').delete().eq('workout_id', editWorkoutId);
+    if (delErr) { toast('Error: ' + delErr.message, 'err'); return; }
+
+    const exRows = exercises.map((e, idx) => ({
+      ...e, workout_id: editWorkoutId, user_id: S.user.id, sort_order: idx
+    }));
+    const { error: exErr } = await sb.from('exercises').insert(exRows);
+    if (exErr) { toast('Error: ' + exErr.message, 'err'); return; }
+
+    await loadWorkouts();
+    renderWorkouts();
+    closeModal('m-edit-workout');
+    toast('Workout updated', 'ok');
+  }, 'Saving changes...');
+}
+
+async function deleteWorkout(id) {
+  if (_openMenu) { _openMenu.classList.remove('open'); _openMenu = null; }
+  const w = S.workouts.find(x => x.id === id);
+  if (!w || !confirm(`Delete "${w.name}"? This cannot be undone.`)) return;
+
+  await withLoading(async () => {
+    // Delete exercises first, then workout
+    await sb.from('exercises').delete().eq('workout_id', id);
+    const { error } = await sb.from('workouts').delete().eq('id', id);
+    if (error) { toast('Error: ' + error.message, 'err'); return; }
+
+    await loadWorkouts();
+    renderWorkouts();
+    toast('Workout deleted', 'ok');
+  }, 'Deleting...');
+}
+
 function renderWorkouts() {
   const list = document.getElementById('workoutList');
   if (S.workouts.length === 0) {
@@ -582,8 +743,17 @@ function renderWorkouts() {
   list.innerHTML = S.workouts.map(w => `
     <div class="card" onclick="startSession('${w.id}')">
       <div class="card-head">
-        <span class="card-name">${w.name}</span>
-        <span class="card-meta">${w.exercises?.length || 0} exercise${w.exercises?.length !== 1 ? 's' : ''}</span>
+        <div class="card-left">
+          <span class="card-name">${w.name}</span>
+          <span class="card-meta">${w.exercises?.length || 0} exercise${w.exercises?.length !== 1 ? 's' : ''}</span>
+        </div>
+        <div class="card-menu-wrap">
+          <button class="card-menu-btn" onclick="event.stopPropagation();toggleCardMenu('${w.id}')">...</button>
+          <div class="card-menu" id="cmenu-${w.id}">
+            <button class="card-menu-item" onclick="event.stopPropagation();openEditWorkout('${w.id}')">Edit</button>
+            <button class="card-menu-item danger" onclick="event.stopPropagation();deleteWorkout('${w.id}')">Delete</button>
+          </div>
+        </div>
       </div>
       <div class="card-chips">
         ${(w.exercises || []).map(e => `<span class="chip">${e.name}</span>`).join('')}
