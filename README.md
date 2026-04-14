@@ -38,4 +38,4 @@ Three problems, one small tool:
 4. Add your GitHub Pages URL to Supabase → Authentication → URL Configuration
 5. Push to GitHub Pages
 
-No backend. No build process. No subscriptions.
+No build process. No subscriptions.
