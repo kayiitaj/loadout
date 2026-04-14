@@ -24,7 +24,7 @@
       --font:     'IBM Plex Mono', monospace;
     }
     *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-    html, body { background:var(--bg); color:var(--white); font-family:var(--font); min-height:100dvh; font-size:13px; overscroll-behavior:none; }
+    html, body { background:var(--bg); color:var(--white); font-family:var(--font); min-height:100dvh; font-size:14px; overscroll-behavior:none; }
 
     /* SCREENS */
     .screen { display:none; min-height:100dvh; flex-direction:column; }
@@ -32,9 +32,9 @@
 
     /* CENTERED (login / onboard) */
     .centered { flex:1; display:flex; flex-direction:column; justify-content:center; padding:40px 24px; max-width:420px; margin:0 auto; width:100%; }
-    .c-logo { font-size:1.5rem; font-weight:600; letter-spacing:0.26em; color:var(--amber); margin-bottom:4px; }
-    .c-sub  { font-size:0.65rem; color:var(--muted); letter-spacing:0.1em; margin-bottom:32px; line-height:1.7; }
-    .c-title{ font-size:0.65rem; letter-spacing:0.18em; text-transform:uppercase; color:var(--white); margin-bottom:16px; }
+    .c-logo { font-size:1.6rem; font-weight:600; letter-spacing:0.26em; color:var(--amber); margin-bottom:4px; }
+    .c-sub  { font-size:0.72rem; color:var(--muted); letter-spacing:0.1em; margin-bottom:32px; line-height:1.7; }
+    .c-title{ font-size:0.72rem; letter-spacing:0.18em; text-transform:uppercase; color:var(--white); margin-bottom:16px; }
 
     /* APP HEADER */
     .app-header {
@@ -42,14 +42,14 @@
       padding:16px 16px 12px; border-bottom:1px solid var(--border);
       max-width:480px; margin:0 auto; width:100%;
     }
-    .logo { font-size:0.95rem; font-weight:600; letter-spacing:0.24em; color:var(--amber); }
-    .hdr-right { font-size:0.6rem; color:var(--muted); letter-spacing:0.08em; cursor:pointer; }
+    .logo { font-size:1.05rem; font-weight:600; letter-spacing:0.24em; color:var(--amber); }
+    .hdr-right { font-size:0.68rem; color:var(--muted); letter-spacing:0.08em; cursor:pointer; }
     .hdr-right:hover { color:var(--white); }
 
     /* NAV */
     .nav { display:flex; border-bottom:1px solid var(--border); max-width:480px; margin:0 auto; width:100%; }
     .nav-btn {
-      flex:1; padding:10px 0; font-family:var(--font); font-size:0.58rem;
+      flex:1; padding:12px 0; font-family:var(--font); font-size:0.68rem;
       letter-spacing:0.16em; text-transform:uppercase; color:var(--muted);
       background:none; border:none; cursor:pointer;
       border-bottom:2px solid transparent; transition:color 0.15s; margin-bottom:-1px;
@@ -62,17 +62,17 @@
 
     /* SECTION LABEL */
     .slabel {
-      font-size:0.56rem; letter-spacing:0.22em; text-transform:uppercase;
-      color:var(--muted); padding:13px 16px 8px; border-bottom:1px solid var(--border);
+      font-size:0.64rem; letter-spacing:0.22em; text-transform:uppercase;
+      color:var(--muted); padding:14px 16px 10px; border-bottom:1px solid var(--border);
     }
 
     /* FIELDS */
     .field { display:flex; flex-direction:column; gap:4px; margin-bottom:10px; }
-    .field label, .flabel { font-size:0.56rem; letter-spacing:0.16em; text-transform:uppercase; color:var(--muted); }
+    .field label, .flabel { font-size:0.64rem; letter-spacing:0.16em; text-transform:uppercase; color:var(--muted); }
     .finput {
       background:var(--surface2); border:1px solid var(--border2);
-      color:var(--white); font-family:var(--font); font-size:0.9rem;
-      padding:10px; border-radius:2px; outline:none; width:100%;
+      color:var(--white); font-family:var(--font); font-size:0.95rem;
+      padding:12px; border-radius:2px; outline:none; width:100%;
       transition:border-color 0.15s; -webkit-appearance:none;
     }
     .finput:focus { border-color:var(--amber); }
@@ -84,9 +84,9 @@
 
     /* BUTTONS */
     .btn {
-      font-family:var(--font); font-size:0.65rem; font-weight:500;
+      font-family:var(--font); font-size:0.72rem; font-weight:500;
       letter-spacing:0.14em; text-transform:uppercase;
-      border:none; border-radius:2px; padding:12px 16px; cursor:pointer; transition:opacity 0.15s;
+      border:none; border-radius:2px; padding:14px 18px; cursor:pointer; transition:opacity 0.15s;
     }
     .btn:active { opacity:0.7; }
     .btn-primary { background:var(--amber); color:#0f0f0f; width:100%; }
@@ -94,23 +94,23 @@
     .btn-ghost { background:none; border:1px solid var(--border2); color:var(--muted); }
     .btn-ghost:hover { color:var(--white); border-color:var(--muted); }
     .btn-full { width:100%; }
-    .btn-sm { font-size:0.58rem; padding:8px 12px; }
+    .btn-sm { font-size:0.65rem; padding:10px 14px; }
     .btn-danger { border-color:var(--red); color:var(--red); }
 
     /* WORKOUT CARDS */
     .card {
-      border:1px solid var(--border); border-radius:2px; margin:10px 16px;
+      border:1px solid var(--border); border-radius:2px; margin:12px 16px;
       background:var(--surface); cursor:pointer; transition:border-color 0.15s;
     }
     .card:hover { border-color:var(--border2); }
-    .card-head { display:flex; justify-content:space-between; align-items:center; padding:12px 14px 8px; }
+    .card-head { display:flex; justify-content:space-between; align-items:center; padding:14px 16px 10px; }
     .card-left { display:flex; flex-direction:column; flex:1; min-width:0; }
-    .card-name { font-size:0.85rem; font-weight:500; text-transform:uppercase; letter-spacing:0.06em; }
-    .card-meta { font-size:0.6rem; color:var(--muted); }
+    .card-name { font-size:0.95rem; font-weight:500; text-transform:uppercase; letter-spacing:0.06em; }
+    .card-meta { font-size:0.68rem; color:var(--muted); }
     .card-menu-wrap { position:relative; }
     .card-menu-btn {
       background:none; border:none; color:var(--muted); cursor:pointer;
-      font-size:1.2rem; padding:4px 8px; line-height:1; letter-spacing:2px;
+      font-size:1.4rem; padding:6px 10px; line-height:1; letter-spacing:2px;
     }
     .card-menu-btn:hover { color:var(--white); }
     .card-menu {
@@ -120,8 +120,8 @@
     }
     .card-menu.open { display:block; }
     .card-menu-item {
-      display:block; width:100%; text-align:left; padding:10px 14px;
-      font-family:var(--font); font-size:0.6rem; letter-spacing:0.12em; text-transform:uppercase;
+      display:block; width:100%; text-align:left; padding:12px 16px;
+      font-family:var(--font); font-size:0.68rem; letter-spacing:0.12em; text-transform:uppercase;
       color:var(--muted2); background:none; border:none; cursor:pointer;
       border-bottom:1px solid var(--border);
     }
@@ -129,22 +129,22 @@
     .card-menu-item:hover { color:var(--white); background:var(--surface2); }
     .card-menu-item.danger { color:var(--red); }
     .card-menu-item.danger:hover { background:rgba(192,57,43,0.1); }
-    .card-chips { display:flex; flex-wrap:wrap; gap:5px; padding:0 14px 12px; }
+    .card-chips { display:flex; flex-wrap:wrap; gap:6px; padding:0 16px 14px; }
     .chip {
-      font-size:0.55rem; letter-spacing:0.1em; text-transform:uppercase;
-      color:var(--muted2); border:1px solid var(--border); padding:3px 7px; border-radius:1px;
+      font-size:0.62rem; letter-spacing:0.1em; text-transform:uppercase;
+      color:var(--muted2); border:1px solid var(--border); padding:4px 9px; border-radius:1px;
     }
 
     /* SESSION EXERCISES */
-    .sex-block { border-bottom:1px solid var(--border); padding:14px 16px; }
-    .sex-head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px; }
-    .sex-name { font-size:0.85rem; font-weight:500; text-transform:uppercase; letter-spacing:0.06em; }
-    .sex-target { font-size:0.6rem; color:var(--muted); }
+    .sex-block { border-bottom:1px solid var(--border); padding:16px 16px; }
+    .sex-head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px; }
+    .sex-name { font-size:0.95rem; font-weight:500; text-transform:uppercase; letter-spacing:0.06em; }
+    .sex-target { font-size:0.7rem; color:var(--muted); }
     .sex-target em { color:var(--amber); font-style:normal; }
 
     .outcome-row { display:flex; gap:7px; margin-bottom:8px; }
     .obtn {
-      flex:1; padding:10px 4px; font-family:var(--font); font-size:0.6rem;
+      flex:1; padding:12px 4px; font-family:var(--font); font-size:0.7rem;
       letter-spacing:0.1em; text-transform:uppercase;
       border:1px solid var(--border2); border-radius:2px;
       background:none; color:var(--muted); cursor:pointer; transition:all 0.15s;
@@ -154,11 +154,11 @@
     .obtn.sel-skip { border-color:var(--muted); color:var(--muted2);background:rgba(90,90,90,0.09); }
 
     .actual-fields { display:none; }
-    .actual-fields.show { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px; }
+    .actual-fields.show { display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:8px; margin-top:10px; }
 
     .prog-badge {
-      display:inline-block; font-size:0.56rem; letter-spacing:0.1em; text-transform:uppercase;
-      padding:3px 8px; border-radius:1px; margin-top:6px;
+      display:inline-block; font-size:0.64rem; letter-spacing:0.1em; text-transform:uppercase;
+      padding:4px 10px; border-radius:1px; margin-top:8px;
     }
     .badge-up   { background:rgba(61,153,112,0.12); color:var(--green); border:1px solid rgba(61,153,112,0.25); }
     .badge-same { background:rgba(90,90,90,0.12);   color:var(--muted2);border:1px solid var(--border); }
@@ -169,23 +169,23 @@
       background:var(--bg); border-top:1px solid var(--border); padding:12px 16px; z-index:50;
     }
     .bottom-inner { max-width:480px; margin:0 auto; display:flex; gap:8px; align-items:center; }
-    .bottom-summary { flex:1; font-size:0.62rem; color:var(--muted); line-height:1.5; }
+    .bottom-summary { flex:1; font-size:0.7rem; color:var(--muted); line-height:1.5; }
     .bottom-summary strong { color:var(--white); font-weight:500; }
     .btn-finish {
-      font-family:var(--font); font-size:0.65rem; font-weight:600; letter-spacing:0.14em;
+      font-family:var(--font); font-size:0.72rem; font-weight:600; letter-spacing:0.14em;
       text-transform:uppercase; background:var(--amber); color:#0f0f0f;
-      border:none; border-radius:2px; padding:13px 20px; cursor:pointer; white-space:nowrap;
+      border:none; border-radius:2px; padding:14px 22px; cursor:pointer; white-space:nowrap;
     }
     .btn-finish:disabled { background:var(--amber-lo); color:#555; cursor:not-allowed; }
 
     /* HISTORY */
-    .hist-block { border-bottom:1px solid var(--border); padding:12px 16px; }
-    .hist-head { display:flex; justify-content:space-between; margin-bottom:8px; }
-    .hist-name { font-size:0.8rem; font-weight:500; text-transform:uppercase; letter-spacing:0.06em; }
-    .hist-date { font-size:0.6rem; color:var(--muted); }
-    .hist-row  { display:flex; justify-content:space-between; font-size:0.68rem; color:var(--muted2); padding:3px 0; }
-    .hist-ex   { text-transform:uppercase; letter-spacing:0.04em; color:var(--white); font-size:0.7rem; }
-    .dot { width:7px; height:7px; border-radius:50%; display:inline-block; margin-right:5px; vertical-align:middle; }
+    .hist-block { border-bottom:1px solid var(--border); padding:14px 16px; }
+    .hist-head { display:flex; justify-content:space-between; margin-bottom:10px; }
+    .hist-name { font-size:0.9rem; font-weight:500; text-transform:uppercase; letter-spacing:0.06em; }
+    .hist-date { font-size:0.68rem; color:var(--muted); }
+    .hist-row  { display:flex; justify-content:space-between; font-size:0.75rem; color:var(--muted2); padding:5px 0; }
+    .hist-ex   { text-transform:uppercase; letter-spacing:0.04em; color:var(--white); font-size:0.78rem; }
+    .dot { width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:6px; vertical-align:middle; }
     .dot-hit  { background:var(--green); }
     .dot-miss { background:var(--red); }
     .dot-skip { background:var(--muted); }
@@ -195,7 +195,7 @@
     .range-row { display:flex; gap:7px; margin-bottom:12px; }
     .export-out {
       background:var(--surface2); border:1px solid var(--border); color:var(--muted2);
-      font-family:var(--font); font-size:0.62rem; padding:12px; border-radius:2px;
+      font-family:var(--font); font-size:0.7rem; padding:12px; border-radius:2px;
       width:100%; height:220px; resize:none; outline:none; line-height:1.65;
     }
     .export-btns { display:flex; gap:8px; margin-top:10px; }
@@ -209,17 +209,27 @@
       border-radius:4px 4px 0 0; max-height:90dvh; overflow-y:auto;
     }
     .modal-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
-    .modal-title { font-size:0.65rem; letter-spacing:0.18em; text-transform:uppercase; color:var(--amber); }
-    .modal-close { background:none; border:none; color:var(--muted); cursor:pointer; font-size:1.1rem; line-height:1; }
+    .modal-title { font-size:0.72rem; letter-spacing:0.18em; text-transform:uppercase; color:var(--amber); }
+    .modal-close { background:none; border:none; color:var(--muted); cursor:pointer; font-size:1.3rem; line-height:1; }
     .divider { height:1px; background:var(--border); margin:14px 0; }
+
+    /* EXERCISE TYPE SELECTOR */
+    .type-row { display:flex; gap:6px; margin-bottom:10px; }
+    .type-btn {
+      flex:1; padding:9px 4px; font-family:var(--font); font-size:0.62rem;
+      letter-spacing:0.06em; text-transform:uppercase;
+      border:1px solid var(--border2); border-radius:2px;
+      background:none; color:var(--muted); cursor:pointer; transition:all 0.15s;
+    }
+    .type-btn.sel { border-color:var(--amber); color:var(--amber); background:rgba(245,166,35,0.08); }
 
     /* EXERCISE FIELD BLOCK */
     .ex-field-block {
-      border:1px solid var(--border); border-radius:2px; padding:10px;
-      margin-bottom:8px; background:var(--surface2);
+      border:1px solid var(--border); border-radius:2px; padding:12px;
+      margin-bottom:10px; background:var(--surface2);
     }
     .ex-field-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
-    .ex-field-label { font-size:0.54rem; letter-spacing:0.16em; text-transform:uppercase; color:var(--muted); }
+    .ex-field-label { font-size:0.62rem; letter-spacing:0.16em; text-transform:uppercase; color:var(--muted); }
     .ex-remove { background:none; border:none; color:var(--muted); cursor:pointer; font-size:1rem; }
 
     /* TOAST */
@@ -227,7 +237,7 @@
       position:fixed; top:16px; left:50%;
       transform:translateX(-50%) translateY(-80px);
       background:var(--surface); border:1px solid var(--border2);
-      color:var(--white); font-family:var(--font); font-size:0.66rem;
+      color:var(--white); font-family:var(--font); font-size:0.72rem;
       letter-spacing:0.06em; padding:10px 18px; border-radius:2px;
       transition:transform 0.22s ease; z-index:300; white-space:nowrap;
     }
@@ -255,10 +265,10 @@
       border-radius:50%; animation:_spin 0.7s linear infinite;
     }
     .loading-text {
-      font-size:0.6rem; letter-spacing:0.16em; text-transform:uppercase; color:var(--muted2);
+      font-size:0.68rem; letter-spacing:0.16em; text-transform:uppercase; color:var(--muted2);
     }
 
-    .empty { padding:28px 16px; font-size:0.68rem; color:var(--muted); letter-spacing:0.06em; }
+    .empty { padding:28px 16px; font-size:0.76rem; color:var(--muted); letter-spacing:0.06em; }
     .gap   { height:100px; }
     .mt8   { margin-top:8px; }
     .mb0   { margin-bottom:0 !important; }
@@ -387,7 +397,7 @@
       <input class="finput upper" type="text" id="wkName" placeholder="YMCA / DOWNSTAIRS / PUSH DAY" autocorrect="off"/>
     </div>
     <div class="divider"></div>
-    <div style="font-size:0.56rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Exercises</div>
+    <div style="font-size:0.64rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Exercises</div>
     <div id="exFields"></div>
     <button class="btn btn-ghost btn-full" style="margin-bottom:12px" onclick="addExField()">+ Add Exercise</button>
     <button class="btn btn-primary" onclick="saveWorkout()">Save Workout</button>
@@ -406,7 +416,7 @@
       <input class="finput upper" type="text" id="editWkName" autocorrect="off"/>
     </div>
     <div class="divider"></div>
-    <div style="font-size:0.56rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Exercises</div>
+    <div style="font-size:0.64rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Exercises</div>
     <div id="editExFields"></div>
     <button class="btn btn-ghost btn-full" style="margin-bottom:12px" onclick="addEditExField()">+ Add Exercise</button>
     <button class="btn btn-primary" onclick="updateWorkout()">Save Changes</button>
@@ -542,31 +552,67 @@ function updateHeader() {
 // ══════════════════════════════════════════════════════════
 let exCount = 0;
 
+function exType(ex) {
+  if (ex.reps < 0) return 'timed';
+  if (ex.reps === 0) return 'sets_only';
+  return 'standard';
+}
+
+function setExFieldType(prefix, i, type) {
+  const block = document.getElementById(prefix + 'exf-' + i);
+  if (!block) return;
+  block.dataset.type = type;
+  block.querySelectorAll('.type-btn').forEach(b => b.classList.toggle('sel', b.dataset.type === type));
+  const f2 = document.getElementById(prefix + 'ex-f2-' + i);
+  const f3 = document.getElementById(prefix + 'ex-f3-' + i);
+  const l2 = document.getElementById(prefix + 'ex-l2-' + i);
+  const l3 = document.getElementById(prefix + 'ex-l3-' + i);
+  const params = document.getElementById(prefix + 'ex-params-' + i);
+  if (type === 'sets_only') {
+    f2.style.display = 'none'; f3.style.display = 'none';
+    params.style.gridTemplateColumns = '1fr';
+  } else {
+    f2.style.display = ''; f3.style.display = '';
+    l2.textContent = type === 'timed' ? 'Seconds' : 'Reps';
+    l3.textContent = type === 'timed' ? 'Weight (opt)' : 'Start Wt';
+    params.style.gridTemplateColumns = '1fr 1fr 1fr';
+  }
+}
+
 function addExField(ex = null) {
   const i = exCount++;
+  const type = ex ? exType(ex) : 'standard';
+  const repsVal = type === 'timed' ? Math.abs(ex.reps) : (ex?.reps || '');
+  const weightVal = ex?.current_weight || ex?.start_weight || '';
   const div = document.createElement('div');
   div.className = 'ex-field-block';
   div.id = 'exf-' + i;
+  div.dataset.type = type;
   div.innerHTML = `
     <div class="ex-field-top">
       <span class="ex-field-label">Exercise ${i + 1}</span>
       <button class="ex-remove" onclick="document.getElementById('exf-${i}').remove()">×</button>
     </div>
+    <div class="type-row">
+      <button class="type-btn ${type==='standard'?'sel':''}" data-type="standard" onclick="event.preventDefault();setExFieldType('','${i}','standard')">Sets x Reps</button>
+      <button class="type-btn ${type==='timed'?'sel':''}" data-type="timed" onclick="event.preventDefault();setExFieldType('','${i}','timed')">Timed</button>
+      <button class="type-btn ${type==='sets_only'?'sel':''}" data-type="sets_only" onclick="event.preventDefault();setExFieldType('','${i}','sets_only')">Sets Only</button>
+    </div>
     <div class="field" style="margin-bottom:8px">
       <input class="finput upper" type="text" id="en-${i}" placeholder="BACK SQUAT" autocorrect="off" value="${ex?.name||''}"/>
     </div>
-    <div class="row3">
+    <div class="row3" id="ex-params-${i}" style="grid-template-columns:${type==='sets_only'?'1fr':'1fr 1fr 1fr'}">
       <div class="field mb0">
         <label class="flabel">Sets</label>
         <input class="finput" type="number" id="es-${i}" placeholder="3" inputmode="numeric" value="${ex?.sets||''}"/>
       </div>
-      <div class="field mb0">
-        <label class="flabel">Reps</label>
-        <input class="finput" type="number" id="er-${i}" placeholder="5" inputmode="numeric" value="${ex?.reps||''}"/>
+      <div class="field mb0" id="ex-f2-${i}" style="${type==='sets_only'?'display:none':''}">
+        <label class="flabel" id="ex-l2-${i}">${type==='timed'?'Seconds':'Reps'}</label>
+        <input class="finput" type="number" id="er-${i}" placeholder="${type==='timed'?'30':'5'}" inputmode="numeric" value="${repsVal||''}"/>
       </div>
-      <div class="field mb0">
-        <label class="flabel">Start Wt</label>
-        <input class="finput" type="number" id="ew-${i}" placeholder="135" inputmode="decimal" value="${ex?.current_weight||ex?.start_weight||''}"/>
+      <div class="field mb0" id="ex-f3-${i}" style="${type==='sets_only'?'display:none':''}">
+        <label class="flabel" id="ex-l3-${i}">${type==='timed'?'Weight (opt)':'Start Wt'}</label>
+        <input class="finput" type="number" id="ew-${i}" placeholder="${type==='timed'?'0':'135'}" inputmode="decimal" value="${weightVal||''}"/>
       </div>
     </div>
   `;
@@ -577,18 +623,30 @@ async function saveWorkout() {
   const name = document.getElementById('wkName').value.trim().toUpperCase();
   if (!name) { toast('Enter a workout name', 'err'); return; }
 
-  const inputs = document.querySelectorAll('[id^="en-"]');
+  const blocks = document.querySelectorAll('#exFields .ex-field-block');
   const exercises = [];
   let valid = true;
 
-  inputs.forEach(inp => {
-    const i  = inp.id.split('-')[1];
-    const nm = (document.getElementById('en-' + i)?.value || '').trim().toUpperCase();
-    const s  = parseInt(document.getElementById('es-' + i)?.value);
-    const r  = parseInt(document.getElementById('er-' + i)?.value);
-    const w  = parseFloat(document.getElementById('ew-' + i)?.value);
-    if (!nm || isNaN(s) || isNaN(r) || isNaN(w)) { valid = false; return; }
-    exercises.push({ name: nm, sets: s, reps: r, start_weight: w, current_weight: w });
+  blocks.forEach(block => {
+    const i    = block.id.replace('exf-', '');
+    const type = block.dataset.type || 'standard';
+    const nm   = (document.getElementById('en-' + i)?.value || '').trim().toUpperCase();
+    const s    = parseInt(document.getElementById('es-' + i)?.value);
+    if (!nm || isNaN(s)) { valid = false; return; }
+
+    if (type === 'standard') {
+      const r = parseInt(document.getElementById('er-' + i)?.value);
+      const w = parseFloat(document.getElementById('ew-' + i)?.value);
+      if (isNaN(r) || isNaN(w)) { valid = false; return; }
+      exercises.push({ name: nm, sets: s, reps: r, start_weight: w, current_weight: w });
+    } else if (type === 'timed') {
+      const dur = parseInt(document.getElementById('er-' + i)?.value);
+      const w   = parseFloat(document.getElementById('ew-' + i)?.value) || 0;
+      if (isNaN(dur)) { valid = false; return; }
+      exercises.push({ name: nm, sets: s, reps: -dur, start_weight: w, current_weight: w });
+    } else {
+      exercises.push({ name: nm, sets: s, reps: 0, start_weight: 0, current_weight: 0 });
+    }
   });
 
   if (!valid || exercises.length === 0) { toast('Complete all exercise fields', 'err'); return; }
@@ -634,29 +692,38 @@ let editWorkoutId = null;
 
 function addEditExField(ex = null) {
   const i = editExCount++;
+  const type = ex ? exType(ex) : 'standard';
+  const repsVal = type === 'timed' ? Math.abs(ex.reps) : (ex?.reps || '');
+  const weightVal = ex?.current_weight || ex?.start_weight || '';
   const div = document.createElement('div');
   div.className = 'ex-field-block';
   div.id = 'eexf-' + i;
+  div.dataset.type = type;
   div.innerHTML = `
     <div class="ex-field-top">
       <span class="ex-field-label">Exercise ${i + 1}</span>
       <button class="ex-remove" onclick="document.getElementById('eexf-${i}').remove()">×</button>
     </div>
+    <div class="type-row">
+      <button class="type-btn ${type==='standard'?'sel':''}" data-type="standard" onclick="event.preventDefault();setExFieldType('e','${i}','standard')">Sets x Reps</button>
+      <button class="type-btn ${type==='timed'?'sel':''}" data-type="timed" onclick="event.preventDefault();setExFieldType('e','${i}','timed')">Timed</button>
+      <button class="type-btn ${type==='sets_only'?'sel':''}" data-type="sets_only" onclick="event.preventDefault();setExFieldType('e','${i}','sets_only')">Sets Only</button>
+    </div>
     <div class="field" style="margin-bottom:8px">
       <input class="finput upper" type="text" id="een-${i}" placeholder="BACK SQUAT" autocorrect="off" value="${ex?.name||''}"/>
     </div>
-    <div class="row3">
+    <div class="row3" id="eex-params-${i}" style="grid-template-columns:${type==='sets_only'?'1fr':'1fr 1fr 1fr'}">
       <div class="field mb0">
         <label class="flabel">Sets</label>
         <input class="finput" type="number" id="ees-${i}" placeholder="3" inputmode="numeric" value="${ex?.sets||''}"/>
       </div>
-      <div class="field mb0">
-        <label class="flabel">Reps</label>
-        <input class="finput" type="number" id="eer-${i}" placeholder="5" inputmode="numeric" value="${ex?.reps||''}"/>
+      <div class="field mb0" id="eex-f2-${i}" style="${type==='sets_only'?'display:none':''}">
+        <label class="flabel" id="eex-l2-${i}">${type==='timed'?'Seconds':'Reps'}</label>
+        <input class="finput" type="number" id="eer-${i}" placeholder="${type==='timed'?'30':'5'}" inputmode="numeric" value="${repsVal||''}"/>
       </div>
-      <div class="field mb0">
-        <label class="flabel">Weight</label>
-        <input class="finput" type="number" id="eew-${i}" placeholder="135" inputmode="decimal" value="${ex?.current_weight||ex?.start_weight||''}"/>
+      <div class="field mb0" id="eex-f3-${i}" style="${type==='sets_only'?'display:none':''}">
+        <label class="flabel" id="eex-l3-${i}">${type==='timed'?'Weight (opt)':'Weight'}</label>
+        <input class="finput" type="number" id="eew-${i}" placeholder="${type==='timed'?'0':'135'}" inputmode="decimal" value="${weightVal||''}"/>
       </div>
     </div>
   `;
@@ -679,18 +746,30 @@ async function updateWorkout() {
   const name = document.getElementById('editWkName').value.trim().toUpperCase();
   if (!name) { toast('Enter a workout name', 'err'); return; }
 
-  const inputs = document.querySelectorAll('[id^="een-"]');
+  const blocks = document.querySelectorAll('#editExFields .ex-field-block');
   const exercises = [];
   let valid = true;
 
-  inputs.forEach(inp => {
-    const i  = inp.id.split('-')[1];
-    const nm = (document.getElementById('een-' + i)?.value || '').trim().toUpperCase();
-    const s  = parseInt(document.getElementById('ees-' + i)?.value);
-    const r  = parseInt(document.getElementById('eer-' + i)?.value);
-    const w  = parseFloat(document.getElementById('eew-' + i)?.value);
-    if (!nm || isNaN(s) || isNaN(r) || isNaN(w)) { valid = false; return; }
-    exercises.push({ name: nm, sets: s, reps: r, start_weight: w, current_weight: w });
+  blocks.forEach(block => {
+    const i    = block.id.replace('eexf-', '');
+    const type = block.dataset.type || 'standard';
+    const nm   = (document.getElementById('een-' + i)?.value || '').trim().toUpperCase();
+    const s    = parseInt(document.getElementById('ees-' + i)?.value);
+    if (!nm || isNaN(s)) { valid = false; return; }
+
+    if (type === 'standard') {
+      const r = parseInt(document.getElementById('eer-' + i)?.value);
+      const w = parseFloat(document.getElementById('eew-' + i)?.value);
+      if (isNaN(r) || isNaN(w)) { valid = false; return; }
+      exercises.push({ name: nm, sets: s, reps: r, start_weight: w, current_weight: w });
+    } else if (type === 'timed') {
+      const dur = parseInt(document.getElementById('eer-' + i)?.value);
+      const w   = parseFloat(document.getElementById('eew-' + i)?.value) || 0;
+      if (isNaN(dur)) { valid = false; return; }
+      exercises.push({ name: nm, sets: s, reps: -dur, start_weight: w, current_weight: w });
+    } else {
+      exercises.push({ name: nm, sets: s, reps: 0, start_weight: 0, current_weight: 0 });
+    }
   });
 
   if (!valid || exercises.length === 0) { toast('Complete all exercise fields', 'err'); return; }
@@ -756,7 +835,11 @@ function renderWorkouts() {
         </div>
       </div>
       <div class="card-chips">
-        ${(w.exercises || []).map(e => `<span class="chip">${e.name}</span>`).join('')}
+        ${(w.exercises || []).map(e => {
+          const t = exType(e);
+          const suffix = t === 'timed' ? ' · timed' : t === 'sets_only' ? ' · sets' : '';
+          return `<span class="chip">${e.name}${suffix}</span>`;
+        }).join('')}
       </div>
     </div>
   `).join('');
@@ -777,30 +860,42 @@ function startSession(workoutId) {
 
 function renderSession() {
   const body = document.getElementById('sessionBody');
-  body.innerHTML = (S.active.workout.exercises || []).map(ex => `
-    <div class="sex-block" id="sx-${ex.id}">
-      <div class="sex-head">
-        <span class="sex-name">${ex.name}</span>
-        <span class="sex-target">Target: <em>${ex.sets}×${ex.reps} @ ${ex.current_weight} lbs</em></span>
-      </div>
-      <div class="outcome-row">
-        <button class="obtn" id="ob-hit-${ex.id}"  onclick="setOutcome('${ex.id}','hit')">✓ Hit</button>
-        <button class="obtn" id="ob-miss-${ex.id}" onclick="setOutcome('${ex.id}','miss')">✗ Miss</button>
-        <button class="obtn" id="ob-skip-${ex.id}" onclick="setOutcome('${ex.id}','skip')">— Skip</button>
-      </div>
-      <div class="actual-fields" id="af-${ex.id}">
-        <div class="field mb0">
-          <label class="flabel">Actual Weight</label>
-          <input class="finput" type="number" id="aw-${ex.id}" value="${ex.current_weight}" inputmode="decimal"/>
+  body.innerHTML = (S.active.workout.exercises || []).map(ex => {
+    const type = exType(ex);
+    const targetStr = type === 'timed'
+      ? `${ex.sets} × ${Math.abs(ex.reps)}s${ex.current_weight > 0 ? ' @ ' + ex.current_weight + ' lbs' : ''}`
+      : type === 'sets_only'
+      ? `${ex.sets} set${ex.sets !== 1 ? 's' : ''}`
+      : `${ex.sets}×${ex.reps}${ex.current_weight > 0 ? ' @ ' + ex.current_weight + ' lbs' : ''}`;
+    const showWeight = type !== 'sets_only' && ex.current_weight > 0;
+    const showReps   = type !== 'sets_only';
+    const repsLabel  = type === 'timed' ? 'Actual Time (sec)' : 'Actual Reps';
+    const repsDefault = type === 'timed' ? Math.abs(ex.reps) : ex.reps;
+    return `
+      <div class="sex-block" id="sx-${ex.id}">
+        <div class="sex-head">
+          <span class="sex-name">${ex.name}</span>
+          <span class="sex-target">Target: <em>${targetStr}</em></span>
         </div>
-        <div class="field mb0">
-          <label class="flabel">Actual Reps</label>
-          <input class="finput" type="number" id="ar-${ex.id}" value="${ex.reps}" inputmode="numeric"/>
+        <div class="outcome-row">
+          <button class="obtn" id="ob-hit-${ex.id}"  onclick="setOutcome('${ex.id}','hit')">✓ Hit</button>
+          <button class="obtn" id="ob-miss-${ex.id}" onclick="setOutcome('${ex.id}','miss')">✗ Miss</button>
+          <button class="obtn" id="ob-skip-${ex.id}" onclick="setOutcome('${ex.id}','skip')">— Skip</button>
         </div>
+        <div class="actual-fields" id="af-${ex.id}">
+          ${showWeight ? `<div class="field mb0">
+            <label class="flabel">Actual Weight</label>
+            <input class="finput" type="number" id="aw-${ex.id}" value="${ex.current_weight}" inputmode="decimal"/>
+          </div>` : ''}
+          ${showReps ? `<div class="field mb0">
+            <label class="flabel">${repsLabel}</label>
+            <input class="finput" type="number" id="ar-${ex.id}" value="${repsDefault}" inputmode="numeric"/>
+          </div>` : ''}
+        </div>
+        <div id="pb-${ex.id}"></div>
       </div>
-      <div id="pb-${ex.id}"></div>
-    </div>
-  `).join('') + '<div class="gap"></div>';
+    `;
+  }).join('') + '<div class="gap"></div>';
 }
 
 function setOutcome(exId, outcome) {
@@ -821,19 +916,29 @@ function setOutcome(exId, outcome) {
     if (o === outcome) b?.classList.add(`sel-${o}`);
   });
 
-  const af = document.getElementById('af-' + exId);
-  outcome !== 'skip' ? af?.classList.add('show') : af?.classList.remove('show');
+  const ex   = S.active.workout.exercises.find(e => e.id === exId);
+  const type = exType(ex);
+  const af   = document.getElementById('af-' + exId);
 
-  // Progression badge
-  const ex  = S.active.workout.exercises.find(e => e.id === exId);
-  const pb  = document.getElementById('pb-' + exId);
-  if (outcome === 'hit') {
-    const next = calcNext(ex, S.profile);
-    pb.innerHTML = `<span class="prog-badge badge-up">Next session: ${next} lbs (+${(next - ex.current_weight).toFixed(1)})</span>`;
-  } else if (outcome === 'miss') {
-    pb.innerHTML = `<span class="prog-badge badge-same">Next session: ${ex.current_weight} lbs — repeat</span>`;
+  if (type === 'sets_only') {
+    af?.classList.remove('show');
   } else {
-    pb.innerHTML = `<span class="prog-badge badge-same">Next session: ${ex.current_weight} lbs — unchanged</span>`;
+    outcome !== 'skip' ? af?.classList.add('show') : af?.classList.remove('show');
+  }
+
+  // Progression badge — only for standard exercises with weight
+  const pb = document.getElementById('pb-' + exId);
+  if (type === 'standard' && ex.current_weight > 0) {
+    if (outcome === 'hit') {
+      const next = calcNext(ex, S.profile);
+      pb.innerHTML = `<span class="prog-badge badge-up">Next session: ${next} lbs (+${(next - ex.current_weight).toFixed(1)})</span>`;
+    } else if (outcome === 'miss') {
+      pb.innerHTML = `<span class="prog-badge badge-same">Next session: ${ex.current_weight} lbs — repeat</span>`;
+    } else {
+      pb.innerHTML = `<span class="prog-badge badge-same">Next session: ${ex.current_weight} lbs — unchanged</span>`;
+    }
+  } else {
+    pb.innerHTML = '';
   }
 
   updateSummary();
@@ -852,18 +957,26 @@ async function finishSession() {
   const weightUpdates = [];
 
   for (const ex of workout.exercises) {
+    const type = exType(ex);
     const o = outcomes[ex.id] || { outcome: 'skip' };
-    const actualWt   = parseFloat(document.getElementById('aw-' + ex.id)?.value) || ex.current_weight;
-    const actualReps = parseInt(document.getElementById('ar-' + ex.id)?.value)   || ex.reps;
-    const nextWt     = o.outcome === 'hit' ? calcNext(ex, S.profile) : ex.current_weight;
+
+    const actualWt = (type !== 'sets_only' && ex.current_weight > 0)
+      ? (parseFloat(document.getElementById('aw-' + ex.id)?.value) || ex.current_weight)
+      : ex.current_weight;
+    const actualReps = type !== 'sets_only'
+      ? (parseInt(document.getElementById('ar-' + ex.id)?.value) || (type === 'timed' ? Math.abs(ex.reps) : ex.reps))
+      : 0;
+    const nextWt = (type === 'standard' && ex.current_weight > 0 && o.outcome === 'hit')
+      ? calcNext(ex, S.profile)
+      : ex.current_weight;
 
     logs.push({
       user_id: S.user.id, workout_id: workout.id, exercise_id: ex.id,
       workout_name: workout.name, exercise_name: ex.name,
       date, sets_target: ex.sets, reps_target: ex.reps, weight_target: ex.current_weight,
       outcome: o.outcome,
-      actual_weight: o.outcome !== 'skip' ? actualWt : null,
-      actual_reps:   o.outcome !== 'skip' ? actualReps : null,
+      actual_weight: o.outcome !== 'skip' && type !== 'sets_only' ? actualWt : null,
+      actual_reps:   o.outcome !== 'skip' && type !== 'sets_only' ? actualReps : null,
       next_weight: nextWt,
     });
 
@@ -955,15 +1068,18 @@ function renderHistory() {
         <span class="hist-name">${g.name}</span>
         <span class="hist-date">${g.date}</span>
       </div>
-      ${g.rows.map(r => `
-        <div class="hist-row">
-          <span>
-            <span class="dot dot-${r.outcome}"></span>
-            <span class="hist-ex">${r.exercise_name}</span>
-          </span>
-          <span>${r.outcome !== 'skip' ? `${r.actual_weight} lbs × ${r.actual_reps}` : 'skipped'}</span>
-        </div>
-      `).join('')}
+      ${g.rows.map(r => {
+        const rt = r.reps_target < 0 ? 'timed' : r.reps_target === 0 ? 'sets_only' : 'standard';
+        let detail;
+        if (r.outcome === 'skip') { detail = 'skipped'; }
+        else if (rt === 'sets_only') { detail = r.outcome === 'hit' ? 'completed' : 'missed'; }
+        else if (rt === 'timed') { detail = (r.actual_weight > 0 ? r.actual_weight + ' lbs · ' : '') + r.actual_reps + 's'; }
+        else { detail = r.actual_weight + ' lbs × ' + r.actual_reps; }
+        return `<div class="hist-row">
+          <span><span class="dot dot-${r.outcome}"></span><span class="hist-ex">${r.exercise_name}</span></span>
+          <span>${detail}</span>
+        </div>`;
+      }).join('')}
     </div>
   `).join('');
 }
@@ -994,9 +1110,18 @@ function genExport(days) {
   Object.values(groups).reverse().forEach(g => {
     out += `[${g.date}] ${g.name}\n`;
     g.rows.forEach(r => {
-      const tag    = r.outcome === 'hit' ? '✓' : r.outcome === 'miss' ? '✗' : '—';
-      const actual = r.outcome !== 'skip' ? `${r.actual_weight} lbs × ${r.actual_reps} reps` : 'skipped';
-      const next   = r.outcome !== 'skip' ? ` → next: ${r.next_weight} lbs` : '';
+      const rt  = r.reps_target < 0 ? 'timed' : r.reps_target === 0 ? 'sets_only' : 'standard';
+      const tag = r.outcome === 'hit' ? '✓' : r.outcome === 'miss' ? '✗' : '—';
+      let actual, next = '';
+      if (r.outcome === 'skip') { actual = 'skipped'; }
+      else if (rt === 'sets_only') { actual = r.outcome === 'hit' ? 'completed' : 'missed'; }
+      else if (rt === 'timed') {
+        actual = (r.actual_weight > 0 ? r.actual_weight + ' lbs × ' : '') + r.actual_reps + 's';
+        if (r.next_weight > 0) next = ` → next: ${r.next_weight} lbs`;
+      } else {
+        actual = `${r.actual_weight} lbs × ${r.actual_reps} reps`;
+        next = ` → next: ${r.next_weight} lbs`;
+      }
       out += `  ${tag} ${r.exercise_name.padEnd(22)} ${actual}${next}\n`;
     });
     out += '\n';
