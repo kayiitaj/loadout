@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>LOADOUT</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg:       #0f0f0f;
+      --surface:  #181818;
+      --surface2: #202020;
+      --border:   #2a2a2a;
+      --border2:  #363636;
+      --amber:    #f5a623;
+      --amber-lo: #7a5010;
+      --white:    #e6e6e6;
+      --muted:    #5a5a5a;
+      --muted2:   #888;
+      --green:    #3d9970;
+      --red:      #c0392b;
+      --font:     'IBM Plex Mono', monospace;
+    }
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    html, body { background:var(--bg); color:var(--white); font-family:var(--font); min-height:100dvh; font-size:13px; overscroll-behavior:none; }
+
+    /* SCREENS */
+    .screen { display:none; min-height:100dvh; flex-direction:column; }
+    .screen.active { display:flex; }
+
+    /* CENTERED (login / onboard) */
+    .centered { flex:1; display:flex; flex-direction:column; justify-content:center; padding:40px 24px; max-width:420px; margin:0 auto; width:100%; }
+    .c-logo { font-size:1.5rem; font-weight:600; letter-spacing:0.26em; color:var(--amber); margin-bottom:4px; }
+    .c-sub  { font-size:0.65rem; color:var(--muted); letter-spacing:0.1em; margin-bottom:32px; line-height:1.7; }
+    .c-title{ font-size:0.65rem; letter-spacing:0.18em; text-transform:uppercase; color:var(--white); margin-bottom:16px; }
+
+    /* APP HEADER */
+    .app-header {
+      display:flex; justify-content:space-between; align-items:center;
+      padding:16px 16px 12px; border-bottom:1px solid var(--border);
+      max-width:480px; margin:0 auto; width:100%;
+    }
+    .logo { font-size:0.95rem; font-weight:600; letter-spacing:0.24em; color:var(--amber); }
+    .hdr-right { font-size:0.6rem; color:var(--muted); letter-spacing:0.08em; cursor:pointer; }
+    .hdr-right:hover { color:var(--white); }
+
+    /* NAV */
+    .nav { display:flex; border-bottom:1px solid var(--border); max-width:480px; margin:0 auto; width:100%; }
+    .nav-btn {
+      flex:1; padding:10px 0; font-family:var(--font); font-size:0.58rem;
+      letter-spacing:0.16em; text-transform:uppercase; color:var(--muted);
+      background:none; border:none; cursor:pointer;
+      border-bottom:2px solid transparent; transition:color 0.15s; margin-bottom:-1px;
+    }
+    .nav-btn.active { color:var(--amber); border-bottom-color:var(--amber); }
+
+    /* PANE */
+    .pane { flex:1; overflow-y:auto; padding-bottom:90px; }
+    .pane-inner { max-width:480px; margin:0 auto; width:100%; }
+
+    /* SECTION LABEL */
+    .slabel {
+      font-size:0.56rem; letter-spacing:0.22em; text-transform:uppercase;
+      color:var(--muted); padding:13px 16px 8px; border-bottom:1px solid var(--border);
+    }
+
+    /* FIELDS */
+    .field { display:flex; flex-direction:column; gap:4px; margin-bottom:10px; }
+    .field label, .flabel { font-size:0.56rem; letter-spacing:0.16em; text-transform:uppercase; color:var(--muted); }
+    .finput {
+      background:var(--surface2); border:1px solid var(--border2);
+      color:var(--white); font-family:var(--font); font-size:0.9rem;
+      padding:10px; border-radius:2px; outline:none; width:100%;
+      transition:border-color 0.15s; -webkit-appearance:none;
+    }
+    .finput:focus { border-color:var(--amber); }
+    .finput::placeholder { color:var(--muted); font-weight:300; }
+    .finput.upper { text-transform:uppercase; letter-spacing:0.05em; }
+    textarea.finput { resize:none; font-size:0.8rem; }
+    .row2 { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .row3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+
+    /* BUTTONS */
+    .btn {
+      font-family:var(--font); font-size:0.65rem; font-weight:500;
+      letter-spacing:0.14em; text-transform:uppercase;
+      border:none; border-radius:2px; padding:12px 16px; cursor:pointer; transition:opacity 0.15s;
+    }
+    .btn:active { opacity:0.7; }
+    .btn-primary { background:var(--amber); color:#0f0f0f; width:100%; }
+    .btn-primary:disabled { background:var(--amber-lo); color:#555; cursor:not-allowed; }
+    .btn-ghost { background:none; border:1px solid var(--border2); color:var(--muted); }
+    .btn-ghost:hover { color:var(--white); border-color:var(--muted); }
+    .btn-full { width:100%; }
+    .btn-sm { font-size:0.58rem; padding:8px 12px; }
+    .btn-danger { border-color:var(--red); color:var(--red); }
+
+    /* WORKOUT CARDS */
+    .card {
+      border:1px solid var(--border); border-radius:2px; margin:10px 16px;
+      background:var(--surface); cursor:pointer; transition:border-color 0.15s;
+    }
+    .card:hover { border-color:var(--border2); }
+    .card-head { display:flex; justify-content:space-between; align-items:center; padding:12px 14px 8px; }
+    .card-name { font-size:0.85rem; font-weight:500; text-transform:uppercase; letter-spacing:0.06em; }
+    .card-meta { font-size:0.6rem; color:var(--muted); }
+    .card-chips { display:flex; flex-wrap:wrap; gap:5px; padding:0 14px 12px; }
+    .chip {
+      font-size:0.55rem; letter-spacing:0.1em; text-transform:uppercase;
+      color:var(--muted2); border:1px solid var(--border); padding:3px 7px; border-radius:1px;
+    }
+
+    /* SESSION EXERCISES */
+    .sex-block { border-bottom:1px solid var(--border); padding:14px 16px; }
+    .sex-head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px; }
+    .sex-name { font-size:0.85rem; font-weight:500; text-transform:uppercase; letter-spacing:0.06em; }
+    .sex-target { font-size:0.6rem; color:var(--muted); }
+    .sex-target em { color:var(--amber); font-style:normal; }
+
+    .outcome-row { display:flex; gap:7px; margin-bottom:8px; }
+    .obtn {
+      flex:1; padding:10px 4px; font-family:var(--font); font-size:0.6rem;
+      letter-spacing:0.1em; text-transform:uppercase;
+      border:1px solid var(--border2); border-radius:2px;
+      background:none; color:var(--muted); cursor:pointer; transition:all 0.15s;
+    }
+    .obtn.sel-hit  { border-color:var(--green); color:var(--green); background:rgba(61,153,112,0.09); }
+    .obtn.sel-miss { border-color:var(--red);   color:var(--red);   background:rgba(192,57,43,0.09); }
+    .obtn.sel-skip { border-color:var(--muted); color:var(--muted2);background:rgba(90,90,90,0.09); }
+
+    .actual-fields { display:none; }
+    .actual-fields.show { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px; }
+
+    .prog-badge {
+      display:inline-block; font-size:0.56rem; letter-spacing:0.1em; text-transform:uppercase;
+      padding:3px 8px; border-radius:1px; margin-top:6px;
+    }
+    .badge-up   { background:rgba(61,153,112,0.12); color:var(--green); border:1px solid rgba(61,153,112,0.25); }
+    .badge-same { background:rgba(90,90,90,0.12);   color:var(--muted2);border:1px solid var(--border); }
+
+    /* BOTTOM BAR */
+    .bottom-bar {
+      position:fixed; bottom:0; left:0; right:0;
+      background:var(--bg); border-top:1px solid var(--border); padding:12px 16px; z-index:50;
+    }
+    .bottom-inner { max-width:480px; margin:0 auto; display:flex; gap:8px; align-items:center; }
+    .bottom-summary { flex:1; font-size:0.62rem; color:var(--muted); line-height:1.5; }
+    .bottom-summary strong { color:var(--white); font-weight:500; }
+    .btn-finish {
+      font-family:var(--font); font-size:0.65rem; font-weight:600; letter-spacing:0.14em;
+      text-transform:uppercase; background:var(--amber); color:#0f0f0f;
+      border:none; border-radius:2px; padding:13px 20px; cursor:pointer; white-space:nowrap;
+    }
+    .btn-finish:disabled { background:var(--amber-lo); color:#555; cursor:not-allowed; }
+
+    /* HISTORY */
+    .hist-block { border-bottom:1px solid var(--border); padding:12px 16px; }
+    .hist-head { display:flex; justify-content:space-between; margin-bottom:8px; }
+    .hist-name { font-size:0.8rem; font-weight:500; text-transform:uppercase; letter-spacing:0.06em; }
+    .hist-date { font-size:0.6rem; color:var(--muted); }
+    .hist-row  { display:flex; justify-content:space-between; font-size:0.68rem; color:var(--muted2); padding:3px 0; }
+    .hist-ex   { text-transform:uppercase; letter-spacing:0.04em; color:var(--white); font-size:0.7rem; }
+    .dot { width:7px; height:7px; border-radius:50%; display:inline-block; margin-right:5px; vertical-align:middle; }
+    .dot-hit  { background:var(--green); }
+    .dot-miss { background:var(--red); }
+    .dot-skip { background:var(--muted); }
+
+    /* EXPORT */
+    .export-wrap { padding:14px 16px; }
+    .range-row { display:flex; gap:7px; margin-bottom:12px; }
+    .export-out {
+      background:var(--surface2); border:1px solid var(--border); color:var(--muted2);
+      font-family:var(--font); font-size:0.62rem; padding:12px; border-radius:2px;
+      width:100%; height:220px; resize:none; outline:none; line-height:1.65;
+    }
+    .export-btns { display:flex; gap:8px; margin-top:10px; }
+
+    /* MODAL */
+    .overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:100; align-items:flex-end; justify-content:center; }
+    .overlay.open { display:flex; }
+    .modal {
+      background:var(--surface); border-top:1px solid var(--border2);
+      width:100%; max-width:480px; padding:20px 16px 36px;
+      border-radius:4px 4px 0 0; max-height:90dvh; overflow-y:auto;
+    }
+    .modal-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+    .modal-title { font-size:0.65rem; letter-spacing:0.18em; text-transform:uppercase; color:var(--amber); }
+    .modal-close { background:none; border:none; color:var(--muted); cursor:pointer; font-size:1.1rem; line-height:1; }
+    .divider { height:1px; background:var(--border); margin:14px 0; }
+
+    /* EXERCISE FIELD BLOCK */
+    .ex-field-block {
+      border:1px solid var(--border); border-radius:2px; padding:10px;
+      margin-bottom:8px; background:var(--surface2);
+    }
+    .ex-field-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+    .ex-field-label { font-size:0.54rem; letter-spacing:0.16em; text-transform:uppercase; color:var(--muted); }
+    .ex-remove { background:none; border:none; color:var(--muted); cursor:pointer; font-size:1rem; }
+
+    /* TOAST */
+    .toast {
+      position:fixed; top:16px; left:50%;
+      transform:translateX(-50%) translateY(-80px);
+      background:var(--surface); border:1px solid var(--border2);
+      color:var(--white); font-family:var(--font); font-size:0.66rem;
+      letter-spacing:0.06em; padding:10px 18px; border-radius:2px;
+      transition:transform 0.22s ease; z-index:300; white-space:nowrap;
+    }
+    .toast.show { transform:translateX(-50%) translateY(0); }
+    .toast.ok  { border-color:var(--green); color:var(--green); }
+    .toast.err { border-color:var(--red);   color:var(--red); }
+
+    /* SPINNER */
+    .spin {
+      display:inline-block; width:10px; height:10px;
+      border:2px solid var(--border2); border-top-color:var(--amber);
+      border-radius:50%; animation:_spin 0.7s linear infinite;
+      margin-right:6px; vertical-align:middle;
+    }
+    @keyframes _spin { to { transform:rotate(360deg); } }
+
+    .empty { padding:28px 16px; font-size:0.68rem; color:var(--muted); letter-spacing:0.06em; }
+    .gap   { height:100px; }
+    .mt8   { margin-top:8px; }
+    .mb0   { margin-bottom:0 !important; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════ LOGIN ══════════════════ -->
+<div class="screen active" id="s-login">
+  <div class="centered">
+    <div class="c-logo">LOADOUT</div>
+    <div class="c-sub">Progressive overload.<br>Every session counts.</div>
+    <div class="c-title">Sign in</div>
+    <div class="field">
+      <label>Email</label>
+      <input class="finput" type="email" id="loginEmail" placeholder="you@email.com" inputmode="email" autocomplete="email"/>
+    </div>
+    <button class="btn btn-primary mt8" id="btnMagic" onclick="sendMagicLink()">Send Magic Link →</button>
+    <div style="margin-top:14px;font-size:0.6rem;color:var(--muted);line-height:1.7" id="loginMsg"></div>
+  </div>
+</div>
+
+<!-- ══════════════════ ONBOARD ══════════════════ -->
+<div class="screen" id="s-onboard">
+  <div class="centered">
+    <div class="c-logo" style="font-size:1.1rem">LOADOUT</div>
+    <div class="c-sub" style="margin-bottom:20px">Quick setup — just once.</div>
+    <div class="field">
+      <label>Your name</label>
+      <input class="finput" type="text" id="obName" placeholder="First name" autocomplete="given-name"/>
+    </div>
+    <div class="row2">
+      <div class="field mb0">
+        <label>Age</label>
+        <input class="finput" type="number" id="obAge" placeholder="35" inputmode="numeric"/>
+      </div>
+      <div class="field mb0">
+        <label>Bodyweight (lbs)</label>
+        <input class="finput" type="number" id="obBW" placeholder="175" inputmode="decimal"/>
+      </div>
+    </div>
+    <button class="btn btn-primary mt8" onclick="saveOnboard()" style="margin-top:12px">Let's go →</button>
+  </div>
+</div>
+
+<!-- ══════════════════ APP ══════════════════ -->
+<div class="screen" id="s-app">
+  <div class="app-header">
+    <span class="logo">LOADOUT</span>
+    <span class="hdr-right" id="hdrUser" onclick="openModal('m-profile')">—</span>
+  </div>
+  <nav class="nav">
+    <button class="nav-btn active" id="tab-workouts" onclick="switchTab('workouts')">Workouts</button>
+    <button class="nav-btn"        id="tab-history"  onclick="switchTab('history')">History</button>
+    <button class="nav-btn"        id="tab-export"   onclick="switchTab('export')">Export</button>
+  </nav>
+
+  <!-- WORKOUTS -->
+  <div class="pane" id="pane-workouts">
+    <div class="pane-inner">
+      <div class="slabel">Your Workouts</div>
+      <div id="workoutList"><div class="empty">No workouts yet.</div></div>
+      <div style="padding:12px 16px">
+        <button class="btn btn-ghost btn-full" onclick="openModal('m-new-workout')">+ New Workout</button>
+      </div>
+      <div class="gap"></div>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div class="pane" id="pane-history" style="display:none">
+    <div class="pane-inner">
+      <div class="slabel">Past Sessions</div>
+      <div id="historyList"><div class="empty">No sessions yet.</div></div>
+      <div class="gap"></div>
+    </div>
+  </div>
+
+  <!-- EXPORT -->
+  <div class="pane" id="pane-export" style="display:none">
+    <div class="pane-inner">
+      <div class="slabel">Export Readout</div>
+      <div class="export-wrap">
+        <div class="range-row">
+          <button class="btn btn-ghost btn-sm btn-full" onclick="genExport(7)">Past Week</button>
+          <button class="btn btn-ghost btn-sm btn-full" onclick="genExport(30)">Past Month</button>
+          <button class="btn btn-ghost btn-sm btn-full" onclick="genExport(0)">All Time</button>
+        </div>
+        <textarea class="export-out" id="exportOut" readonly placeholder="Select a range above..."></textarea>
+        <div class="export-btns">
+          <button class="btn btn-ghost btn-full" onclick="copyExport()">Copy</button>
+          <button class="btn btn-ghost btn-full" onclick="dlExport()">Download</button>
+        </div>
+      </div>
+      <div class="gap"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ SESSION ══════════════════ -->
+<div class="screen" id="s-session">
+  <div class="app-header">
+    <span class="logo" id="sessionTitle">—</span>
+    <button class="btn btn-ghost btn-sm" onclick="cancelSession()">← Back</button>
+  </div>
+  <div class="pane" id="sessionBody"></div>
+  <div class="bottom-bar">
+    <div class="bottom-inner">
+      <div class="bottom-summary" id="sessionSummary"><strong>0</strong> / 0 logged</div>
+      <button class="btn-finish" id="btnFinish" onclick="finishSession()" disabled>Finish →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ MODALS ══════════════════ -->
+
+<!-- New Workout -->
+<div class="overlay" id="m-new-workout">
+  <div class="modal">
+    <div class="modal-top">
+      <span class="modal-title">New Workout</span>
+      <button class="modal-close" onclick="closeModal('m-new-workout')">×</button>
+    </div>
+    <div class="field">
+      <label>Workout Name</label>
+      <input class="finput upper" type="text" id="wkName" placeholder="YMCA / DOWNSTAIRS / PUSH DAY" autocorrect="off"/>
+    </div>
+    <div class="divider"></div>
+    <div style="font-size:0.56rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Exercises</div>
+    <div id="exFields"></div>
+    <button class="btn btn-ghost btn-full" style="margin-bottom:12px" onclick="addExField()">+ Add Exercise</button>
+    <button class="btn btn-primary" onclick="saveWorkout()">Save Workout</button>
+  </div>
+</div>
+
+<!-- Profile -->
+<div class="overlay" id="m-profile">
+  <div class="modal">
+    <div class="modal-top">
+      <span class="modal-title">Profile</span>
+      <button class="modal-close" onclick="closeModal('m-profile')">×</button>
+    </div>
+    <div class="field"><label>Name</label><input class="finput" type="text" id="profName"/></div>
+    <div class="row2">
+      <div class="field mb0"><label>Age</label><input class="finput" type="number" id="profAge" inputmode="numeric"/></div>
+      <div class="field mb0"><label>Bodyweight (lbs)</label><input class="finput" type="number" id="profBW" inputmode="decimal"/></div>
+    </div>
+    <button class="btn btn-primary mt8" style="margin-top:12px" onclick="saveProfile()">Save</button>
+    <div class="divider"></div>
+    <button class="btn btn-ghost btn-full btn-danger" onclick="signOut()">Sign Out</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// SUPABASE CONFIG — replace these two values after creating your project
+// ══════════════════════════════════════════════════════════
+const SUPA_URL = 'https://jdbvvhrnycxoategawct.supabase.co';
+const SUPA_KEY = 'sb_publishable_XewIU1BuRETeNAGZ-Z3E8A_fI04J06Z'; // safe to expose — row-level security handles the rest
+
+const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+// ══════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════
+let S = {
+  user:     null,   // supabase user object
+  profile:  null,   // { name, age, bw }
+  workouts: [],
+  sessions: [],
+  active:   null,   // current session in progress
+};
+
+// ══════════════════════════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════════════════════════
+async function sendMagicLink() {
+  const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+  if (!email.includes('@')) { toast('Enter a valid email', 'err'); return; }
+
+  const btn = document.getElementById('btnMagic');
+  btn.disabled = true; btn.textContent = 'Sending...';
+
+  const { error } = await sb.auth.signInWithOtp({
+    email,
+    options: { emailRedirectTo: window.location.href }
+  });
+
+  btn.disabled = false; btn.textContent = 'Send Magic Link →';
+
+  if (error) { toast('Error: ' + error.message, 'err'); return; }
+  document.getElementById('loginMsg').textContent = '✓ Check your email — link expires in 1 hour.';
+}
+
+async function signOut() {
+  await sb.auth.signOut();
+  S = { user:null, profile:null, workouts:[], sessions:[], active:null };
+  closeModal('m-profile');
+  show('s-login');
+}
+
+// ══════════════════════════════════════════════════════════
+// ONBOARDING
+// ══════════════════════════════════════════════════════════
+async function saveOnboard() {
+  const name = document.getElementById('obName').value.trim();
+  const age  = parseInt(document.getElementById('obAge').value);
+  const bw   = parseFloat(document.getElementById('obBW').value);
+  if (!name || isNaN(age) || isNaN(bw)) { toast('Fill all fields', 'err'); return; }
+
+  const { error } = await sb.from('profiles').insert({ id: S.user.id, name, age, bw });
+  if (error) { toast('Save error: ' + error.message, 'err'); return; }
+
+  S.profile = { name, age, bw };
+  await loadData();
+  show('s-app');
+  updateHeader();
+}
+
+// ══════════════════════════════════════════════════════════
+// PROFILE
+// ══════════════════════════════════════════════════════════
+function openProfileModal() {
+  document.getElementById('profName').value = S.profile?.name || '';
+  document.getElementById('profAge').value  = S.profile?.age  || '';
+  document.getElementById('profBW').value   = S.profile?.bw   || '';
+  openModal('m-profile');
+}
+
+async function saveProfile() {
+  const name = document.getElementById('profName').value.trim();
+  const age  = parseInt(document.getElementById('profAge').value);
+  const bw   = parseFloat(document.getElementById('profBW').value);
+  if (!name || isNaN(age) || isNaN(bw)) { toast('Fill all fields', 'err'); return; }
+
+  const { error } = await sb.from('profiles').upsert({ id: S.user.id, name, age, bw });
+  if (error) { toast('Error: ' + error.message, 'err'); return; }
+
+  S.profile = { name, age, bw };
+  updateHeader();
+  closeModal('m-profile');
+  toast('Saved', 'ok');
+}
+
+function updateHeader() {
+  const n = S.profile?.name;
+  document.getElementById('hdrUser').textContent = n ? n.split(' ')[0].toUpperCase() : '—';
+}
+
+// ══════════════════════════════════════════════════════════
+// WORKOUTS
+// ══════════════════════════════════════════════════════════
+let exCount = 0;
+
+function addExField(ex = null) {
+  const i = exCount++;
+  const div = document.createElement('div');
+  div.className = 'ex-field-block';
+  div.id = 'exf-' + i;
+  div.innerHTML = `
+    <div class="ex-field-top">
+      <span class="ex-field-label">Exercise ${i + 1}</span>
+      <button class="ex-remove" onclick="document.getElementById('exf-${i}').remove()">×</button>
+    </div>
+    <div class="field" style="margin-bottom:8px">
+      <input class="finput upper" type="text" id="en-${i}" placeholder="BACK SQUAT" autocorrect="off" value="${ex?.name||''}"/>
+    </div>
+    <div class="row3">
+      <div class="field mb0">
+        <label class="flabel">Sets</label>
+        <input class="finput" type="number" id="es-${i}" placeholder="3" inputmode="numeric" value="${ex?.sets||''}"/>
+      </div>
+      <div class="field mb0">
+        <label class="flabel">Reps</label>
+        <input class="finput" type="number" id="er-${i}" placeholder="5" inputmode="numeric" value="${ex?.reps||''}"/>
+      </div>
+      <div class="field mb0">
+        <label class="flabel">Start Wt</label>
+        <input class="finput" type="number" id="ew-${i}" placeholder="135" inputmode="decimal" value="${ex?.current_weight||ex?.start_weight||''}"/>
+      </div>
+    </div>
+  `;
+  document.getElementById('exFields').appendChild(div);
+}
+
+async function saveWorkout() {
+  const name = document.getElementById('wkName').value.trim().toUpperCase();
+  if (!name) { toast('Enter a workout name', 'err'); return; }
+
+  const inputs = document.querySelectorAll('[id^="en-"]');
+  const exercises = [];
+  let valid = true;
+
+  inputs.forEach(inp => {
+    const i  = inp.id.split('-')[1];
+    const nm = (document.getElementById('en-' + i)?.value || '').trim().toUpperCase();
+    const s  = parseInt(document.getElementById('es-' + i)?.value);
+    const r  = parseInt(document.getElementById('er-' + i)?.value);
+    const w  = parseFloat(document.getElementById('ew-' + i)?.value);
+    if (!nm || isNaN(s) || isNaN(r) || isNaN(w)) { valid = false; return; }
+    exercises.push({ name: nm, sets: s, reps: r, start_weight: w, current_weight: w });
+  });
+
+  if (!valid || exercises.length === 0) { toast('Complete all exercise fields', 'err'); return; }
+
+  // Insert workout
+  const { data: wk, error: wkErr } = await sb.from('workouts')
+    .insert({ user_id: S.user.id, name })
+    .select().single();
+  if (wkErr) { toast('Error: ' + wkErr.message, 'err'); return; }
+
+  // Insert exercises
+  const exRows = exercises.map((e, idx) => ({ ...e, workout_id: wk.id, user_id: S.user.id, sort_order: idx }));
+  const { error: exErr } = await sb.from('exercises').insert(exRows);
+  if (exErr) { toast('Error: ' + exErr.message, 'err'); return; }
+
+  await loadWorkouts();
+  renderWorkouts();
+  closeModal('m-new-workout');
+  document.getElementById('wkName').value = '';
+  document.getElementById('exFields').innerHTML = '';
+  exCount = 0;
+  toast('Workout saved', 'ok');
+}
+
+function renderWorkouts() {
+  const list = document.getElementById('workoutList');
+  if (S.workouts.length === 0) {
+    list.innerHTML = '<div class="empty">No workouts yet. Create one below.</div>';
+    return;
+  }
+  list.innerHTML = S.workouts.map(w => `
+    <div class="card" onclick="startSession('${w.id}')">
+      <div class="card-head">
+        <span class="card-name">${w.name}</span>
+        <span class="card-meta">${w.exercises?.length || 0} exercise${w.exercises?.length !== 1 ? 's' : ''}</span>
+      </div>
+      <div class="card-chips">
+        ${(w.exercises || []).map(e => `<span class="chip">${e.name}</span>`).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+// ══════════════════════════════════════════════════════════
+// SESSION
+// ══════════════════════════════════════════════════════════
+function startSession(workoutId) {
+  const workout = S.workouts.find(w => w.id === workoutId);
+  if (!workout) return;
+  S.active = { workout, outcomes: {}, date: isoDate(new Date()) };
+  document.getElementById('sessionTitle').textContent = workout.name;
+  renderSession();
+  show('s-session');
+  updateSummary();
+}
+
+function renderSession() {
+  const body = document.getElementById('sessionBody');
+  body.innerHTML = (S.active.workout.exercises || []).map(ex => `
+    <div class="sex-block" id="sx-${ex.id}">
+      <div class="sex-head">
+        <span class="sex-name">${ex.name}</span>
+        <span class="sex-target">Target: <em>${ex.sets}×${ex.reps} @ ${ex.current_weight} lbs</em></span>
+      </div>
+      <div class="outcome-row">
+        <button class="obtn" id="ob-hit-${ex.id}"  onclick="setOutcome('${ex.id}','hit')">✓ Hit</button>
+        <button class="obtn" id="ob-miss-${ex.id}" onclick="setOutcome('${ex.id}','miss')">✗ Miss</button>
+        <button class="obtn" id="ob-skip-${ex.id}" onclick="setOutcome('${ex.id}','skip')">— Skip</button>
+      </div>
+      <div class="actual-fields" id="af-${ex.id}">
+        <div class="field mb0">
+          <label class="flabel">Actual Weight</label>
+          <input class="finput" type="number" id="aw-${ex.id}" value="${ex.current_weight}" inputmode="decimal"/>
+        </div>
+        <div class="field mb0">
+          <label class="flabel">Actual Reps</label>
+          <input class="finput" type="number" id="ar-${ex.id}" value="${ex.reps}" inputmode="numeric"/>
+        </div>
+      </div>
+      <div id="pb-${ex.id}"></div>
+    </div>
+  `).join('') + '<div class="gap"></div>';
+}
+
+function setOutcome(exId, outcome) {
+  const cur = S.active.outcomes[exId]?.outcome;
+  // Toggle off
+  if (cur === outcome) {
+    delete S.active.outcomes[exId];
+    ['hit','miss','skip'].forEach(o => document.getElementById(`ob-${o}-${exId}`)?.classList.remove(`sel-${o}`));
+    document.getElementById('af-' + exId)?.classList.remove('show');
+    document.getElementById('pb-' + exId).innerHTML = '';
+    updateSummary(); return;
+  }
+
+  S.active.outcomes[exId] = { outcome };
+  ['hit','miss','skip'].forEach(o => {
+    const b = document.getElementById(`ob-${o}-${exId}`);
+    b?.classList.remove(`sel-hit`,`sel-miss`,`sel-skip`);
+    if (o === outcome) b?.classList.add(`sel-${o}`);
+  });
+
+  const af = document.getElementById('af-' + exId);
+  outcome !== 'skip' ? af?.classList.add('show') : af?.classList.remove('show');
+
+  // Progression badge
+  const ex  = S.active.workout.exercises.find(e => e.id === exId);
+  const pb  = document.getElementById('pb-' + exId);
+  if (outcome === 'hit') {
+    const next = calcNext(ex, S.profile);
+    pb.innerHTML = `<span class="prog-badge badge-up">Next session: ${next} lbs (+${(next - ex.current_weight).toFixed(1)})</span>`;
+  } else if (outcome === 'miss') {
+    pb.innerHTML = `<span class="prog-badge badge-same">Next session: ${ex.current_weight} lbs — repeat</span>`;
+  } else {
+    pb.innerHTML = `<span class="prog-badge badge-same">Next session: ${ex.current_weight} lbs — unchanged</span>`;
+  }
+
+  updateSummary();
+}
+
+function updateSummary() {
+  const total = S.active?.workout.exercises?.length || 0;
+  const done  = Object.keys(S.active?.outcomes || {}).length;
+  document.getElementById('sessionSummary').innerHTML = `<strong>${done}</strong> / ${total} logged`;
+  document.getElementById('btnFinish').disabled = done === 0;
+}
+
+async function finishSession() {
+  const { workout, outcomes, date } = S.active;
+  const logs = [];
+  const weightUpdates = [];
+
+  for (const ex of workout.exercises) {
+    const o = outcomes[ex.id] || { outcome: 'skip' };
+    const actualWt   = parseFloat(document.getElementById('aw-' + ex.id)?.value) || ex.current_weight;
+    const actualReps = parseInt(document.getElementById('ar-' + ex.id)?.value)   || ex.reps;
+    const nextWt     = o.outcome === 'hit' ? calcNext(ex, S.profile) : ex.current_weight;
+
+    logs.push({
+      user_id: S.user.id, workout_id: workout.id, exercise_id: ex.id,
+      workout_name: workout.name, exercise_name: ex.name,
+      date, sets_target: ex.sets, reps_target: ex.reps, weight_target: ex.current_weight,
+      outcome: o.outcome,
+      actual_weight: o.outcome !== 'skip' ? actualWt : null,
+      actual_reps:   o.outcome !== 'skip' ? actualReps : null,
+      next_weight: nextWt,
+    });
+
+    if (nextWt !== ex.current_weight) weightUpdates.push({ id: ex.id, current_weight: nextWt });
+  }
+
+  const btn = document.getElementById('btnFinish');
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span>Saving...';
+
+  try {
+    const { error: logErr } = await sb.from('session_logs').insert(logs);
+    if (logErr) throw logErr;
+
+    // Update current weights
+    for (const { id, current_weight } of weightUpdates) {
+      await sb.from('exercises').update({ current_weight }).eq('id', id);
+    }
+
+    // Update local state
+    weightUpdates.forEach(({ id, current_weight }) => {
+      const ex = workout.exercises.find(e => e.id === id);
+      if (ex) ex.current_weight = current_weight;
+    });
+
+    await loadSessions();
+    renderWorkouts();
+    toast('Session saved!', 'ok');
+    show('s-app');
+    switchTab('workouts');
+  } catch (e) {
+    toast('Error: ' + e.message, 'err');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Finish →';
+  }
+}
+
+function cancelSession() {
+  if (Object.keys(S.active?.outcomes || {}).length > 0 && !confirm('Discard this session?')) return;
+  S.active = null;
+  show('s-app');
+}
+
+// ══════════════════════════════════════════════════════════
+// PROGRESSION LOGIC
+// ══════════════════════════════════════════════════════════
+function calcNext(ex, profile) {
+  const w    = ex.current_weight;
+  const reps = ex.reps;
+  const age  = profile?.age || 30;
+  const bw   = profile?.bw  || 175;
+  const ratio = w / bw;
+
+  // Increment by relative strength level
+  let inc;
+  if      (ratio < 0.75) inc = 10;
+  else if (ratio < 1.5)  inc = 5;
+  else if (ratio < 2.5)  inc = 2.5;
+  else                   inc = 1.25;
+
+  // Age taper
+  if (age > 50) inc *= 0.70;
+  else if (age > 40) inc *= 0.85;
+
+  // High-rep work progresses slower
+  if (reps > 8) inc *= 0.75;
+
+  // Round to nearest 2.5 lbs
+  return Math.round((w + inc) / 2.5) * 2.5;
+}
+
+// ══════════════════════════════════════════════════════════
+// HISTORY
+// ══════════════════════════════════════════════════════════
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  if (!S.sessions.length) { list.innerHTML = '<div class="empty">No sessions yet.</div>'; return; }
+
+  // Group by date + workout
+  const groups = {};
+  S.sessions.forEach(r => {
+    const key = r.date + '|' + r.workout_name;
+    if (!groups[key]) groups[key] = { date: r.date, name: r.workout_name, rows: [] };
+    groups[key].rows.push(r);
+  });
+
+  list.innerHTML = Object.values(groups).reverse().map(g => `
+    <div class="hist-block">
+      <div class="hist-head">
+        <span class="hist-name">${g.name}</span>
+        <span class="hist-date">${g.date}</span>
+      </div>
+      ${g.rows.map(r => `
+        <div class="hist-row">
+          <span>
+            <span class="dot dot-${r.outcome}"></span>
+            <span class="hist-ex">${r.exercise_name}</span>
+          </span>
+          <span>${r.outcome !== 'skip' ? `${r.actual_weight} lbs × ${r.actual_reps}` : 'skipped'}</span>
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+}
+
+// ══════════════════════════════════════════════════════════
+// EXPORT
+// ══════════════════════════════════════════════════════════
+function genExport(days) {
+  const cutoff = days > 0 ? new Date(Date.now() - days * 864e5) : new Date(0);
+  const rows   = S.sessions.filter(r => new Date(r.date) >= cutoff);
+
+  if (!rows.length) { document.getElementById('exportOut').value = 'No sessions in this range.'; return; }
+
+  const label = days === 7 ? 'PAST 7 DAYS' : days === 30 ? 'PAST 30 DAYS' : 'ALL TIME';
+  let out = `LOADOUT EXPORT — ${label}\n`;
+  out    += `User: ${S.profile?.name} · BW: ${S.profile?.bw} lbs · Age: ${S.profile?.age}\n`;
+  out    += `Generated: ${isoDate(new Date())}\n`;
+  out    += '─'.repeat(44) + '\n\n';
+
+  // Group
+  const groups = {};
+  rows.forEach(r => {
+    const key = r.date + '|' + r.workout_name;
+    if (!groups[key]) groups[key] = { date: r.date, name: r.workout_name, rows: [] };
+    groups[key].rows.push(r);
+  });
+
+  Object.values(groups).reverse().forEach(g => {
+    out += `[${g.date}] ${g.name}\n`;
+    g.rows.forEach(r => {
+      const tag    = r.outcome === 'hit' ? '✓' : r.outcome === 'miss' ? '✗' : '—';
+      const actual = r.outcome !== 'skip' ? `${r.actual_weight} lbs × ${r.actual_reps} reps` : 'skipped';
+      const next   = r.outcome !== 'skip' ? ` → next: ${r.next_weight} lbs` : '';
+      out += `  ${tag} ${r.exercise_name.padEnd(22)} ${actual}${next}\n`;
+    });
+    out += '\n';
+  });
+
+  const hit   = rows.filter(r => r.outcome === 'hit').length;
+  const miss  = rows.filter(r => r.outcome === 'miss').length;
+  const skip  = rows.filter(r => r.outcome === 'skip').length;
+  const done  = rows.length - skip;
+  out += '─'.repeat(44) + '\n';
+  out += `Sessions: ${Object.keys(groups).length} · Sets hit: ${hit}/${done} (${done ? Math.round(hit/done*100) : 0}%) · Misses: ${miss} · Skipped: ${skip}\n`;
+
+  document.getElementById('exportOut').value = out;
+}
+
+function copyExport() {
+  const txt = document.getElementById('exportOut').value;
+  if (!txt || txt.includes('Select a range')) return;
+  navigator.clipboard?.writeText(txt).catch(() => {
+    document.getElementById('exportOut').select();
+    document.execCommand('copy');
+  });
+  toast('Copied!', 'ok');
+}
+
+function dlExport() {
+  const txt = document.getElementById('exportOut').value;
+  if (!txt || txt.includes('Select a range')) return;
+  const a = Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(new Blob([txt], { type: 'text/plain' })),
+    download: `loadout-${isoDate(new Date())}.txt`,
+  });
+  a.click();
+}
+
+// ══════════════════════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════════════════════
+async function loadData() {
+  await Promise.all([loadWorkouts(), loadSessions()]);
+  renderWorkouts();
+  renderHistory();
+}
+
+async function loadWorkouts() {
+  const { data, error } = await sb.from('workouts')
+    .select('*, exercises(*)')
+    .eq('user_id', S.user.id)
+    .order('created_at');
+  if (!error) S.workouts = data || [];
+}
+
+async function loadSessions() {
+  const { data, error } = await sb.from('session_logs')
+    .select('*')
+    .eq('user_id', S.user.id)
+    .order('date', { ascending: false })
+    .order('created_at', { ascending: false })
+    .limit(500);
+  if (!error) S.sessions = data || [];
+}
+
+async function loadProfile() {
+  const { data } = await sb.from('profiles').select('*').eq('id', S.user.id).single();
+  return data;
+}
+
+// ══════════════════════════════════════════════════════════
+// UI HELPERS
+// ══════════════════════════════════════════════════════════
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id)?.classList.add('active');
+}
+
+function switchTab(name) {
+  ['workouts','history','export'].forEach(t => {
+    document.getElementById('pane-' + t).style.display = t === name ? 'block' : 'none';
+    document.getElementById('tab-'  + t)?.classList.toggle('active', t === name);
+  });
+  if (name === 'history') renderHistory();
+}
+
+function openModal(id)  { document.getElementById(id)?.classList.add('open'); }
+function closeModal(id) { document.getElementById(id)?.classList.remove('open'); }
+
+document.querySelectorAll('.overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+});
+
+let _tt;
+function toast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show ' + type;
+  clearTimeout(_tt); _tt = setTimeout(() => { t.className = 'toast'; }, 2600);
+}
+
+function isoDate(d) { return d.toISOString().split('T')[0]; }
+
+// ══════════════════════════════════════════════════════════
+// INIT — Supabase handles the magic link redirect automatically
+// ══════════════════════════════════════════════════════════
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+
+  if (session?.user) {
+    S.user    = session.user;
+    S.profile = await loadProfile();
+    if (!S.profile) { show('s-onboard'); return; }
+    await loadData();
+    show('s-app');
+    updateHeader();
+  } else {
+    show('s-login');
+  }
+
+  // Listen for auth state changes (magic link click lands here)
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
+      S.user    = session.user;
+      S.profile = await loadProfile();
+      if (!S.profile) { show('s-onboard'); return; }
+      await loadData();
+      show('s-app');
+      updateHeader();
+    }
+    if (event === 'SIGNED_OUT') { show('s-login'); }
+  });
+})();
+</script>
+</body>
+</html>
