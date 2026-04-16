@@ -558,6 +558,26 @@ function exType(ex) {
   return 'standard';
 }
 
+function fmtDuration(sec) {
+  const total = Math.max(0, Math.floor(Math.abs(sec || 0)));
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  return m + ':' + String(s).padStart(2, '0');
+}
+
+function repsInputHTML(prefix, i, type, repsVal) {
+  if (type === 'timed') {
+    const total = Math.max(0, Math.abs(parseInt(repsVal) || 0));
+    const mins = Math.floor(total / 60);
+    const secs = total % 60;
+    return `<div style="display:flex;gap:6px">
+      <input class="finput" type="number" id="${prefix}em-${i}" placeholder="0" inputmode="numeric" min="0" value="${total?mins:''}" aria-label="Minutes"/>
+      <input class="finput" type="number" id="${prefix}er-${i}" placeholder="30" inputmode="numeric" min="0" max="59" value="${total?secs:''}" aria-label="Seconds"/>
+    </div>`;
+  }
+  return `<input class="finput" type="number" id="${prefix}er-${i}" placeholder="5" inputmode="numeric" value="${repsVal||''}"/>`;
+}
+
 function setExFieldType(prefix, i, type) {
   const block = document.getElementById(prefix + 'exf-' + i);
   if (!block) return;
@@ -567,15 +587,17 @@ function setExFieldType(prefix, i, type) {
   const f3 = document.getElementById(prefix + 'ex-f3-' + i);
   const l2 = document.getElementById(prefix + 'ex-l2-' + i);
   const l3 = document.getElementById(prefix + 'ex-l3-' + i);
+  const rw = document.getElementById(prefix + 'ex-rw-' + i);
   const params = document.getElementById(prefix + 'ex-params-' + i);
   if (type === 'sets_only') {
     f2.style.display = 'none'; f3.style.display = 'none';
     params.style.gridTemplateColumns = '1fr';
   } else {
     f2.style.display = ''; f3.style.display = '';
-    l2.textContent = type === 'timed' ? 'Seconds' : 'Reps';
+    l2.textContent = type === 'timed' ? 'Min : Sec' : 'Reps';
     l3.textContent = type === 'timed' ? 'Weight (opt)' : 'Start Wt';
     params.style.gridTemplateColumns = '1fr 1fr 1fr';
+    if (rw) rw.innerHTML = repsInputHTML(prefix, i, type, '');
   }
 }
 
@@ -607,8 +629,8 @@ function addExField(ex = null) {
         <input class="finput" type="number" id="es-${i}" placeholder="3" inputmode="numeric" value="${ex?.sets||''}"/>
       </div>
       <div class="field mb0" id="ex-f2-${i}" style="${type==='sets_only'?'display:none':''}">
-        <label class="flabel" id="ex-l2-${i}">${type==='timed'?'Seconds':'Reps'}</label>
-        <input class="finput" type="number" id="er-${i}" placeholder="${type==='timed'?'30':'5'}" inputmode="numeric" value="${repsVal||''}"/>
+        <label class="flabel" id="ex-l2-${i}">${type==='timed'?'Min : Sec':'Reps'}</label>
+        <div id="ex-rw-${i}">${repsInputHTML('', i, type, repsVal)}</div>
       </div>
       <div class="field mb0" id="ex-f3-${i}" style="${type==='sets_only'?'display:none':''}">
         <label class="flabel" id="ex-l3-${i}">${type==='timed'?'Weight (opt)':'Start Wt'}</label>
@@ -640,9 +662,12 @@ async function saveWorkout() {
       if (isNaN(r) || isNaN(w)) { valid = false; return; }
       exercises.push({ name: nm, sets: s, reps: r, start_weight: w, current_weight: w });
     } else if (type === 'timed') {
-      const dur = parseInt(document.getElementById('er-' + i)?.value);
-      const w   = parseFloat(document.getElementById('ew-' + i)?.value) || 0;
-      if (isNaN(dur)) { valid = false; return; }
+      const mRaw = document.getElementById('em-' + i)?.value ?? '';
+      const sRaw = document.getElementById('er-' + i)?.value ?? '';
+      const w    = parseFloat(document.getElementById('ew-' + i)?.value) || 0;
+      if (mRaw.trim() === '' && sRaw.trim() === '') { valid = false; return; }
+      const dur = (parseInt(mRaw) || 0) * 60 + (parseInt(sRaw) || 0);
+      if (dur <= 0) { valid = false; return; }
       exercises.push({ name: nm, sets: s, reps: -dur, start_weight: w, current_weight: w });
     } else {
       exercises.push({ name: nm, sets: s, reps: 0, start_weight: 0, current_weight: 0 });
@@ -718,8 +743,8 @@ function addEditExField(ex = null) {
         <input class="finput" type="number" id="ees-${i}" placeholder="3" inputmode="numeric" value="${ex?.sets||''}"/>
       </div>
       <div class="field mb0" id="eex-f2-${i}" style="${type==='sets_only'?'display:none':''}">
-        <label class="flabel" id="eex-l2-${i}">${type==='timed'?'Seconds':'Reps'}</label>
-        <input class="finput" type="number" id="eer-${i}" placeholder="${type==='timed'?'30':'5'}" inputmode="numeric" value="${repsVal||''}"/>
+        <label class="flabel" id="eex-l2-${i}">${type==='timed'?'Min : Sec':'Reps'}</label>
+        <div id="eex-rw-${i}">${repsInputHTML('e', i, type, repsVal)}</div>
       </div>
       <div class="field mb0" id="eex-f3-${i}" style="${type==='sets_only'?'display:none':''}">
         <label class="flabel" id="eex-l3-${i}">${type==='timed'?'Weight (opt)':'Weight'}</label>
@@ -763,9 +788,12 @@ async function updateWorkout() {
       if (isNaN(r) || isNaN(w)) { valid = false; return; }
       exercises.push({ name: nm, sets: s, reps: r, start_weight: w, current_weight: w });
     } else if (type === 'timed') {
-      const dur = parseInt(document.getElementById('eer-' + i)?.value);
-      const w   = parseFloat(document.getElementById('eew-' + i)?.value) || 0;
-      if (isNaN(dur)) { valid = false; return; }
+      const mRaw = document.getElementById('eem-' + i)?.value ?? '';
+      const sRaw = document.getElementById('eer-' + i)?.value ?? '';
+      const w    = parseFloat(document.getElementById('eew-' + i)?.value) || 0;
+      if (mRaw.trim() === '' && sRaw.trim() === '') { valid = false; return; }
+      const dur = (parseInt(mRaw) || 0) * 60 + (parseInt(sRaw) || 0);
+      if (dur <= 0) { valid = false; return; }
       exercises.push({ name: nm, sets: s, reps: -dur, start_weight: w, current_weight: w });
     } else {
       exercises.push({ name: nm, sets: s, reps: 0, start_weight: 0, current_weight: 0 });
@@ -863,14 +891,27 @@ function renderSession() {
   body.innerHTML = (S.active.workout.exercises || []).map(ex => {
     const type = exType(ex);
     const targetStr = type === 'timed'
-      ? `${ex.sets} × ${Math.abs(ex.reps)}s${ex.current_weight > 0 ? ' @ ' + ex.current_weight + ' lbs' : ''}`
+      ? `${ex.sets} × ${fmtDuration(ex.reps)}${ex.current_weight > 0 ? ' @ ' + ex.current_weight + ' lbs' : ''}`
       : type === 'sets_only'
       ? `${ex.sets} set${ex.sets !== 1 ? 's' : ''}`
       : `${ex.sets}×${ex.reps}${ex.current_weight > 0 ? ' @ ' + ex.current_weight + ' lbs' : ''}`;
     const showWeight = type !== 'sets_only' && ex.current_weight > 0;
     const showReps   = type !== 'sets_only';
-    const repsLabel  = type === 'timed' ? 'Actual Time (sec)' : 'Actual Reps';
-    const repsDefault = type === 'timed' ? Math.abs(ex.reps) : ex.reps;
+    const targetSec  = Math.abs(ex.reps);
+    const targetMin  = Math.floor(targetSec / 60);
+    const targetRem  = targetSec % 60;
+    const repsFieldHTML = type === 'timed'
+      ? `<div class="field mb0">
+          <label class="flabel">Actual Time (min : sec)</label>
+          <div style="display:flex;gap:6px">
+            <input class="finput" type="number" id="am-${ex.id}" value="${targetMin}" inputmode="numeric" min="0" aria-label="Minutes"/>
+            <input class="finput" type="number" id="as-${ex.id}" value="${targetRem}" inputmode="numeric" min="0" max="59" aria-label="Seconds"/>
+          </div>
+        </div>`
+      : `<div class="field mb0">
+          <label class="flabel">Actual Reps</label>
+          <input class="finput" type="number" id="ar-${ex.id}" value="${ex.reps}" inputmode="numeric"/>
+        </div>`;
     return `
       <div class="sex-block" id="sx-${ex.id}">
         <div class="sex-head">
@@ -887,10 +928,7 @@ function renderSession() {
             <label class="flabel">Actual Weight</label>
             <input class="finput" type="number" id="aw-${ex.id}" value="${ex.current_weight}" inputmode="decimal"/>
           </div>` : ''}
-          ${showReps ? `<div class="field mb0">
-            <label class="flabel">${repsLabel}</label>
-            <input class="finput" type="number" id="ar-${ex.id}" value="${repsDefault}" inputmode="numeric"/>
-          </div>` : ''}
+          ${showReps ? repsFieldHTML : ''}
         </div>
         <div id="pb-${ex.id}"></div>
       </div>
@@ -963,9 +1001,17 @@ async function finishSession() {
     const actualWt = (type !== 'sets_only' && ex.current_weight > 0)
       ? (parseFloat(document.getElementById('aw-' + ex.id)?.value) || ex.current_weight)
       : ex.current_weight;
-    const actualReps = type !== 'sets_only'
-      ? (parseInt(document.getElementById('ar-' + ex.id)?.value) || (type === 'timed' ? Math.abs(ex.reps) : ex.reps))
-      : 0;
+    let actualReps;
+    if (type === 'sets_only') {
+      actualReps = 0;
+    } else if (type === 'timed') {
+      const mRaw = document.getElementById('am-' + ex.id)?.value ?? '';
+      const sRaw = document.getElementById('as-' + ex.id)?.value ?? '';
+      const entered = (parseInt(mRaw) || 0) * 60 + (parseInt(sRaw) || 0);
+      actualReps = entered > 0 || mRaw.trim() !== '' || sRaw.trim() !== '' ? entered : Math.abs(ex.reps);
+    } else {
+      actualReps = parseInt(document.getElementById('ar-' + ex.id)?.value) || ex.reps;
+    }
     const nextWt = (type === 'standard' && ex.current_weight > 0 && o.outcome === 'hit')
       ? calcNext(ex, S.profile)
       : ex.current_weight;
@@ -1073,7 +1119,7 @@ function renderHistory() {
         let detail;
         if (r.outcome === 'skip') { detail = 'skipped'; }
         else if (rt === 'sets_only') { detail = r.outcome === 'hit' ? 'completed' : 'missed'; }
-        else if (rt === 'timed') { detail = (r.actual_weight > 0 ? r.actual_weight + ' lbs · ' : '') + r.actual_reps + 's'; }
+        else if (rt === 'timed') { detail = (r.actual_weight > 0 ? r.actual_weight + ' lbs · ' : '') + fmtDuration(r.actual_reps); }
         else { detail = r.actual_weight + ' lbs × ' + r.actual_reps; }
         return `<div class="hist-row">
           <span><span class="dot dot-${r.outcome}"></span><span class="hist-ex">${r.exercise_name}</span></span>
@@ -1116,7 +1162,7 @@ function genExport(days) {
       if (r.outcome === 'skip') { actual = 'skipped'; }
       else if (rt === 'sets_only') { actual = r.outcome === 'hit' ? 'completed' : 'missed'; }
       else if (rt === 'timed') {
-        actual = (r.actual_weight > 0 ? r.actual_weight + ' lbs × ' : '') + r.actual_reps + 's';
+        actual = (r.actual_weight > 0 ? r.actual_weight + ' lbs × ' : '') + fmtDuration(r.actual_reps);
         if (r.next_weight > 0) next = ` → next: ${r.next_weight} lbs`;
       } else {
         actual = `${r.actual_weight} lbs × ${r.actual_reps} reps`;
