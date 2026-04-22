@@ -152,6 +152,26 @@
     .sex-block.dragging { opacity:0.4; }
     .sex-block.drag-over { border-color:var(--amber); }
     #btnReorder.active { color:var(--amber); border-color:var(--amber); }
+    .wc-card { margin:10px 12px; border:1px solid var(--border); border-radius:4px; background:var(--surface); overflow:hidden; }
+    .wc-head { width:100%; display:flex; align-items:center; gap:10px; padding:14px 14px; background:transparent; border:none; color:var(--white); font-family:var(--font); font-size:0.78rem; font-weight:600; letter-spacing:0.12em; text-transform:uppercase; cursor:pointer; }
+    .wc-head span:first-child { flex:1; text-align:left; }
+    .wc-count { color:var(--muted2); font-weight:500; letter-spacing:0; }
+    .wc-chev { color:var(--muted2); transition:transform 0.15s; }
+    .wc-card.collapsed .wc-chev { transform:rotate(-90deg); }
+    .wc-card.collapsed .wc-body { display:none; }
+    .wc-body { padding:0 0 6px; }
+    .wc-row { display:flex; align-items:center; gap:12px; padding:12px 14px; cursor:pointer; border-top:1px solid var(--border); }
+    .wc-check { width:22px; height:22px; border:1px solid var(--border2); border-radius:3px; display:inline-flex; align-items:center; justify-content:center; color:var(--green); font-size:0.9rem; font-weight:700; flex-shrink:0; }
+    .wc-row.checked .wc-check::before { content:'✓'; }
+    .wc-row.checked .wc-check { border-color:var(--green); }
+    .wc-row.checked .wc-label { color:var(--muted2); }
+    .wc-label { flex:1; font-size:0.78rem; }
+    .wc-label em { color:var(--muted2); font-style:normal; font-size:0.72rem; margin-left:6px; }
+    .summary-row { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border); font-size:0.8rem; }
+    .summary-row:last-child { border-bottom:none; }
+    .summary-val { color:var(--amber); font-weight:600; }
+    .summary-val.ok { color:var(--green); }
+    .summary-val.no { color:var(--red); }
 
     .outcome-row { display:flex; gap:7px; margin-bottom:8px; }
     .obtn {
@@ -452,6 +472,18 @@
     <button class="btn btn-primary mt8" style="margin-top:12px" onclick="saveProfile()">Save</button>
     <div class="divider"></div>
     <button class="btn btn-ghost btn-full btn-danger" onclick="signOut()">Sign Out</button>
+  </div>
+</div>
+
+<!-- Session Summary -->
+<div class="overlay" id="m-summary">
+  <div class="modal">
+    <div class="modal-top">
+      <span class="modal-title">Session Complete</span>
+      <button class="modal-close" onclick="closeSummary()">×</button>
+    </div>
+    <div id="summaryBody"></div>
+    <button class="btn btn-primary" style="margin-top:14px" onclick="closeSummary()">Done</button>
   </div>
 </div>
 
@@ -902,10 +934,10 @@ function renderWorkouts() {
 // ══════════════════════════════════════════════════════════
 // SESSION
 // ══════════════════════════════════════════════════════════
-function startSession(workoutId) {
+async function startSession(workoutId) {
   const workout = S.workouts.find(w => w.id === workoutId);
   if (!workout) return;
-  S.active = { workout, outcomes: {}, date: isoDate(new Date()) };
+  S.active = { workout, outcomes: {}, date: isoDate(new Date()), warmup: new Set(), cooldown: new Set() };
   S.reorderMode = false;
   const rb = document.getElementById('btnReorder');
   if (rb) { rb.textContent = '✎'; rb.classList.remove('active'); }
@@ -914,6 +946,8 @@ function startSession(workoutId) {
   renderSession();
   show('s-session');
   updateSummary();
+  await loadSessionMeta();
+  renderWarmupCooldown();
 }
 
 async function toggleReorderMode() {
@@ -938,8 +972,9 @@ async function toggleReorderMode() {
 let _dragBlock = null;
 
 function enableReorderDnd() {
-  const body = document.getElementById('sessionBody');
-  body.querySelectorAll('.sex-block').forEach(b => {
+  const list = document.getElementById('exerciseList');
+  if (!list) return;
+  list.querySelectorAll('.sex-block').forEach(b => {
     const handle = b.querySelector('.drag-handle');
     if (!handle) return;
     handle.addEventListener('pointerdown', e => startReorderDrag(e, b));
@@ -982,7 +1017,7 @@ function onReorderMove(e, block) {
 async function persistReorder() {
   if (!S.active) return;
   const workout = S.active.workout;
-  const ordered = Array.from(document.querySelectorAll('#sessionBody .sex-block'))
+  const ordered = Array.from(document.querySelectorAll('#exerciseList .sex-block'))
     .map(b => b.dataset.exid)
     .filter(Boolean);
   if (!ordered.length) return;
@@ -1006,9 +1041,126 @@ async function persistReorder() {
   }
 }
 
+const WARMUP_ITEMS = [
+  { id: 'leg_swings',   label: 'Leg swings',               detail: '10 each side' },
+  { id: 'hip_circles',  label: 'Hip circles',              detail: '10 each side' },
+  { id: 'arm_circles',  label: 'Arm circles',              detail: '10 each side' },
+  { id: 'light_cardio', label: 'Light cardio / jump rope', detail: '5 min' },
+];
+const COOLDOWN_BASE = [
+  { id: 'hip_flexor', label: 'Hip flexor stretch', detail: '1 min each side' },
+  { id: 'cat_cow',    label: 'Cat-cow',            detail: '10 reps' },
+  { id: 'cobra',      label: 'Cobra press-up',     detail: '10 reps' },
+];
+const COOLDOWN_LEGS = [
+  { id: 'hamstring', label: 'Hamstring stretch', detail: '1 min each side' },
+  { id: 'glute',     label: 'Glute stretch',     detail: '1 min each side' },
+];
+const COOLDOWN_UPPER = [
+  { id: 'chest_doorframe', label: 'Chest/pec doorframe stretch', detail: '1 min' },
+  { id: 'lat_overhead',    label: 'Lat overhead stretch',        detail: '1 min each side' },
+];
+const LEG_KEYWORDS   = ['SQUAT', 'RDL', 'LUNGE', 'LEG EXTENSION', 'LEG CURL'];
+const UPPER_KEYWORDS = ['CHEST PRESS', 'SHOULDER PRESS', 'SEATED ROW', 'ROWS', 'BICEP CURL', 'PULL-UP', 'PULLUP', 'PULL UP'];
+
+function cooldownItemsFor(exercises) {
+  const names = (exercises || []).map(e => (e.name || '').toUpperCase());
+  const hasLegs  = names.some(n => LEG_KEYWORDS.some(k => n.includes(k)));
+  const hasUpper = names.some(n => UPPER_KEYWORDS.some(k => n.includes(k)));
+  return [...COOLDOWN_BASE, ...(hasLegs ? COOLDOWN_LEGS : []), ...(hasUpper ? COOLDOWN_UPPER : [])];
+}
+
+async function loadSessionMeta() {
+  if (!S.active) return;
+  const { workout, date } = S.active;
+  S.active.warmup = new Set();
+  S.active.cooldown = new Set();
+  try {
+    const { data } = await sb.from('session_meta')
+      .select('*')
+      .eq('user_id', S.user.id)
+      .eq('workout_id', workout.id)
+      .eq('date', date)
+      .maybeSingle();
+    if (data) {
+      S.active.warmup   = new Set(data.warmup_done   || []);
+      S.active.cooldown = new Set(data.cooldown_done || []);
+    }
+  } catch (e) { /* table may not exist yet */ }
+}
+
+async function saveSessionMeta() {
+  if (!S.active) return;
+  const { workout, date } = S.active;
+  try {
+    await sb.from('session_meta').upsert({
+      user_id: S.user.id,
+      workout_id: workout.id,
+      date,
+      warmup_done:   Array.from(S.active.warmup   || []),
+      cooldown_done: Array.from(S.active.cooldown || []),
+    }, { onConflict: 'user_id,workout_id,date' });
+  } catch (e) { /* table may not exist yet */ }
+}
+
+function renderWCCard(kind, items, done, collapsed) {
+  const checked = items.filter(it => done.has(it.id)).length;
+  const rows = items.map(it => `
+    <div class="wc-row ${done.has(it.id) ? 'checked' : ''}" onclick="toggleWCItem('${kind}','${it.id}')">
+      <span class="wc-check"></span>
+      <span class="wc-label">${it.label} <em>${it.detail}</em></span>
+    </div>`).join('');
+  return `
+    <div class="wc-card ${collapsed ? 'collapsed' : ''}" id="${kind}Card">
+      <button class="wc-head" onclick="toggleWC('${kind}')">
+        <span>${kind.toUpperCase()}</span>
+        <span class="wc-count">${checked}/${items.length}</span>
+        <span class="wc-chev">▾</span>
+      </button>
+      <div class="wc-body">${rows}</div>
+    </div>`;
+}
+
+function renderWarmupCooldown() {
+  if (!S.active) return;
+  const wCol = document.getElementById('warmupContainer');
+  const cCol = document.getElementById('cooldownContainer');
+  if (!wCol || !cCol) return;
+  const cooldownItems = cooldownItemsFor(S.active.workout.exercises);
+  wCol.innerHTML = renderWCCard('warmup',   WARMUP_ITEMS,   S.active.warmup   || new Set(), !!S.active.warmupCollapsed);
+  cCol.innerHTML = renderWCCard('cooldown', cooldownItems, S.active.cooldown || new Set(), !!S.active.cooldownCollapsed);
+}
+
+function toggleWC(kind) {
+  if (!S.active) return;
+  const key = kind + 'Collapsed';
+  S.active[key] = !S.active[key];
+  document.getElementById(kind + 'Card')?.classList.toggle('collapsed');
+}
+
+function toggleWCItem(kind, id) {
+  if (!S.active) return;
+  const set = kind === 'warmup' ? S.active.warmup : S.active.cooldown;
+  if (!set) return;
+  if (set.has(id)) set.delete(id); else set.add(id);
+  renderWarmupCooldown();
+  saveSessionMeta();
+}
+
 function renderSession() {
   const body = document.getElementById('sessionBody');
-  body.innerHTML = (S.active.workout.exercises || []).map(ex => {
+  body.innerHTML = `
+    <div id="warmupContainer"></div>
+    <div id="exerciseList">${renderExerciseListHTML()}</div>
+    <div id="cooldownContainer"></div>
+    <div class="gap"></div>
+  `;
+  renderWarmupCooldown();
+  if (S.reorderMode) enableReorderDnd();
+}
+
+function renderExerciseListHTML() {
+  return (S.active.workout.exercises || []).map(ex => {
     const type = exType(ex);
     const targetStr = type === 'timed'
       ? `${ex.sets} × ${fmtDuration(ex.reps)}${ex.current_weight > 0 ? ' @ ' + ex.current_weight + ' lbs' : ''}`
@@ -1056,8 +1208,7 @@ function renderSession() {
         <div id="pb-${ex.id}"></div>
       </div>
     `;
-  }).join('') + '<div class="gap"></div>';
-  if (S.reorderMode) enableReorderDnd();
+  }).join('');
 }
 
 function setOutcome(exId, outcome) {
@@ -1189,9 +1340,7 @@ async function finishSession() {
 
     await loadSessions();
     renderWorkouts();
-    toast('Session saved!', 'ok');
-    show('s-app');
-    switchTab('workouts');
+    showSessionSummary(outcomes, workout);
   } catch (e) {
     toast('Error: ' + e.message, 'err');
   } finally {
@@ -1205,6 +1354,35 @@ async function cancelSession() {
   S.reorderMode = false;
   S.active = null;
   show('s-app');
+}
+
+function showSessionSummary(outcomes, workout) {
+  const hit  = Object.values(outcomes).filter(o => o.outcome === 'hit').length;
+  const miss = Object.values(outcomes).filter(o => o.outcome === 'miss').length;
+  const skip = (workout.exercises || []).length - hit - miss;
+  const warmup   = S.active?.warmup   || new Set();
+  const cooldown = S.active?.cooldown || new Set();
+  const cdItems  = cooldownItemsFor(workout.exercises);
+  const warmupAll   = WARMUP_ITEMS.every(it => warmup.has(it.id));
+  const cooldownAll = cdItems.every(it => cooldown.has(it.id));
+  const body = document.getElementById('summaryBody');
+  body.innerHTML = `
+    <div class="summary-row"><span>Workout</span><span class="summary-val">${workout.name}</span></div>
+    <div class="summary-row"><span>Hit</span><span class="summary-val ok">${hit}</span></div>
+    <div class="summary-row"><span>Miss</span><span class="summary-val ${miss?'no':''}">${miss}</span></div>
+    <div class="summary-row"><span>Skip</span><span class="summary-val">${skip}</span></div>
+    <div class="summary-row"><span>Warmup</span><span class="summary-val ${warmupAll?'ok':'no'}">${warmupAll ? '✓ complete' : `${warmup.size}/${WARMUP_ITEMS.length}`}</span></div>
+    <div class="summary-row"><span>Cooldown</span><span class="summary-val ${cooldownAll?'ok':'no'}">${cooldownAll ? '✓ complete' : `${cooldown.size}/${cdItems.length}`}</span></div>
+  `;
+  openModal('m-summary');
+}
+
+function closeSummary() {
+  closeModal('m-summary');
+  S.active = null;
+  S.reorderMode = false;
+  show('s-app');
+  if (typeof switchTab === 'function') switchTab('workouts');
 }
 
 // ══════════════════════════════════════════════════════════
