@@ -24,7 +24,7 @@
       --font:     'IBM Plex Mono', monospace;
     }
     *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-    html, body { background:var(--bg); color:var(--white); font-family:var(--font); min-height:100dvh; font-size:14px; overscroll-behavior:none; }
+    html, body { background:var(--bg); color:var(--white); font-family:var(--font); min-height:100dvh; font-size:17px; font-weight:500; overscroll-behavior:none; }
 
     /* SCREENS */
     .screen { display:none; min-height:100dvh; flex-direction:column; }
@@ -76,11 +76,14 @@
       transition:border-color 0.15s; -webkit-appearance:none;
     }
     .finput:focus { border-color:var(--amber); }
-    .finput::placeholder { color:var(--muted); font-weight:300; }
+    .finput::placeholder { color:var(--muted); font-weight:400; }
     .finput.upper { text-transform:uppercase; letter-spacing:0.05em; }
     textarea.finput { resize:none; font-size:0.8rem; }
     .row2 { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
     .row3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+    .ms-row { display:flex; align-items:center; gap:6px; }
+    .ms-row .ms-input { text-align:center; padding-left:4px; padding-right:4px; }
+    .ms-row .ms-sep { color:var(--muted2); font-weight:600; padding:0 2px; }
 
     /* BUTTONS */
     .btn {
@@ -570,17 +573,29 @@ function repsInputHTML(prefix, i, type, repsVal) {
     const total = Math.max(0, Math.abs(parseInt(repsVal) || 0));
     const mins = Math.floor(total / 60);
     const secs = total % 60;
-    return `<div style="display:flex;gap:6px">
-      <input class="finput" type="number" id="${prefix}em-${i}" placeholder="0" inputmode="numeric" min="0" value="${total?mins:''}" aria-label="Minutes"/>
-      <input class="finput" type="number" id="${prefix}er-${i}" placeholder="30" inputmode="numeric" min="0" max="59" value="${total?secs:''}" aria-label="Seconds"/>
+    return `<div class="ms-row">
+      <input class="finput ms-input" type="number" id="${prefix}em-${i}" placeholder="0" inputmode="numeric" min="0" value="${total?mins:''}" aria-label="Minutes"/>
+      <span class="ms-sep">:</span>
+      <input class="finput ms-input" type="number" id="${prefix}er-${i}" placeholder="30" inputmode="numeric" min="0" max="59" value="${total?secs:''}" aria-label="Seconds"/>
     </div>`;
   }
   return `<input class="finput" type="number" id="${prefix}er-${i}" placeholder="5" inputmode="numeric" value="${repsVal||''}"/>`;
 }
 
+function readRepsValFromRW(prefix, i) {
+  const m = document.getElementById(prefix + 'em-' + i)?.value;
+  const s = document.getElementById(prefix + 'er-' + i)?.value;
+  if ((m ?? '') !== '' || (s ?? '') !== '') {
+    return (parseInt(m) || 0) * 60 + (parseInt(s) || 0);
+  }
+  return s ?? '';
+}
+
 function setExFieldType(prefix, i, type) {
   const block = document.getElementById(prefix + 'exf-' + i);
   if (!block) return;
+  const prevType = block.dataset.type || 'standard';
+  const prevVal  = readRepsValFromRW(prefix, i);
   block.dataset.type = type;
   block.querySelectorAll('.type-btn').forEach(b => b.classList.toggle('sel', b.dataset.type === type));
   const f2 = document.getElementById(prefix + 'ex-f2-' + i);
@@ -597,7 +612,7 @@ function setExFieldType(prefix, i, type) {
     l2.textContent = type === 'timed' ? 'Min : Sec' : 'Reps';
     l3.textContent = type === 'timed' ? 'Weight (opt)' : 'Start Wt';
     params.style.gridTemplateColumns = '1fr 1fr 1fr';
-    if (rw) rw.innerHTML = repsInputHTML(prefix, i, type, '');
+    if (rw && prevType !== type) rw.innerHTML = repsInputHTML(prefix, i, type, prevVal);
   }
 }
 
@@ -903,9 +918,10 @@ function renderSession() {
     const repsFieldHTML = type === 'timed'
       ? `<div class="field mb0">
           <label class="flabel">Actual Time (min : sec)</label>
-          <div style="display:flex;gap:6px">
-            <input class="finput" type="number" id="am-${ex.id}" value="${targetMin}" inputmode="numeric" min="0" aria-label="Minutes"/>
-            <input class="finput" type="number" id="as-${ex.id}" value="${targetRem}" inputmode="numeric" min="0" max="59" aria-label="Seconds"/>
+          <div class="ms-row">
+            <input class="finput ms-input" type="number" id="am-${ex.id}" value="${targetMin}" inputmode="numeric" min="0" aria-label="Minutes"/>
+            <span class="ms-sep">:</span>
+            <input class="finput ms-input" type="number" id="as-${ex.id}" value="${targetRem}" inputmode="numeric" min="0" max="59" aria-label="Seconds"/>
           </div>
         </div>`
       : `<div class="field mb0">
