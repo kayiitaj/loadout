@@ -404,7 +404,7 @@
   <div class="app-header">
     <span class="logo" id="sessionTitle">—</span>
     <div style="display:flex;gap:6px">
-      <button class="btn btn-ghost btn-sm" id="btnReorder" onclick="toggleReorderMode()">✎</button>
+      <button class="btn btn-ghost btn-sm" id="btnReorder" onclick="toggleReorderMode()">✎ Reorder</button>
       <button class="btn btn-ghost btn-sm" onclick="cancelSession()">← Back</button>
     </div>
   </div>
@@ -940,7 +940,7 @@ async function startSession(workoutId) {
   S.active = { workout, outcomes: {}, date: isoDate(new Date()), warmup: new Set(), cooldown: new Set() };
   S.reorderMode = false;
   const rb = document.getElementById('btnReorder');
-  if (rb) { rb.textContent = '✎'; rb.classList.remove('active'); }
+  if (rb) { rb.textContent = '✎ Reorder'; rb.classList.remove('active'); }
   document.getElementById('sessionBody').classList.remove('reorder-mode');
   document.getElementById('sessionTitle').textContent = workout.name;
   renderSession();
@@ -961,7 +961,7 @@ async function toggleReorderMode() {
     body.classList.add('reorder-mode');
     renderSession();
   } else {
-    btn.textContent = '✎';
+    btn.textContent = '✎ Reorder';
     btn.classList.remove('active');
     body.classList.remove('reorder-mode');
     await persistReorder();
