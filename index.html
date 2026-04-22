@@ -980,7 +980,7 @@ function setOutcome(exId, outcome) {
     outcome !== 'skip' ? af?.classList.add('show') : af?.classList.remove('show');
   }
 
-  // Progression badge — only for standard exercises with weight
+  // Progression badge
   const pb = document.getElementById('pb-' + exId);
   if (type === 'standard' && ex.current_weight > 0) {
     if (outcome === 'hit') {
@@ -990,6 +990,16 @@ function setOutcome(exId, outcome) {
       pb.innerHTML = `<span class="prog-badge badge-same">Next session: ${ex.current_weight} lbs — repeat</span>`;
     } else {
       pb.innerHTML = `<span class="prog-badge badge-same">Next session: ${ex.current_weight} lbs — unchanged</span>`;
+    }
+  } else if (type === 'timed') {
+    const curSec = Math.abs(ex.reps);
+    if (outcome === 'hit') {
+      const nextSec = calcNextTimed(curSec);
+      pb.innerHTML = `<span class="prog-badge badge-up">Next session: ${fmtDuration(nextSec)} (+${fmtDuration(nextSec - curSec)})</span>`;
+    } else if (outcome === 'miss') {
+      pb.innerHTML = `<span class="prog-badge badge-same">Next session: ${fmtDuration(curSec)} — repeat</span>`;
+    } else {
+      pb.innerHTML = `<span class="prog-badge badge-same">Next session: ${fmtDuration(curSec)} — unchanged</span>`;
     }
   } else {
     pb.innerHTML = '';
@@ -1008,7 +1018,7 @@ function updateSummary() {
 async function finishSession() {
   const { workout, outcomes, date } = S.active;
   const logs = [];
-  const weightUpdates = [];
+  const exUpdates = [];
 
   for (const ex of workout.exercises) {
     const type = exType(ex);
@@ -1031,6 +1041,9 @@ async function finishSession() {
     const nextWt = (type === 'standard' && ex.current_weight > 0 && o.outcome === 'hit')
       ? calcNext(ex, S.profile)
       : ex.current_weight;
+    const nextReps = (type === 'timed' && o.outcome === 'hit')
+      ? -calcNextTimed(Math.abs(ex.reps))
+      : ex.reps;
 
     logs.push({
       user_id: S.user.id, workout_id: workout.id, exercise_id: ex.id,
@@ -1042,7 +1055,10 @@ async function finishSession() {
       next_weight: nextWt,
     });
 
-    if (nextWt !== ex.current_weight) weightUpdates.push({ id: ex.id, current_weight: nextWt });
+    const patch = {};
+    if (nextWt !== ex.current_weight) patch.current_weight = nextWt;
+    if (nextReps !== ex.reps)         patch.reps           = nextReps;
+    if (Object.keys(patch).length)    exUpdates.push({ id: ex.id, patch });
   }
 
   const btn = document.getElementById('btnFinish');
@@ -1052,15 +1068,15 @@ async function finishSession() {
     const { error: logErr } = await sb.from('session_logs').insert(logs);
     if (logErr) throw logErr;
 
-    // Update current weights
-    for (const { id, current_weight } of weightUpdates) {
-      await sb.from('exercises').update({ current_weight }).eq('id', id);
+    // Apply exercise updates (weight progression and/or timed duration progression)
+    for (const { id, patch } of exUpdates) {
+      await sb.from('exercises').update(patch).eq('id', id);
     }
 
     // Update local state
-    weightUpdates.forEach(({ id, current_weight }) => {
+    exUpdates.forEach(({ id, patch }) => {
       const ex = workout.exercises.find(e => e.id === id);
-      if (ex) ex.current_weight = current_weight;
+      if (ex) Object.assign(ex, patch);
     });
 
     await loadSessions();
@@ -1107,6 +1123,11 @@ function calcNext(ex, profile) {
 
   // Round to nearest 2.5 lbs
   return Math.round((w + inc) / 2.5) * 2.5;
+}
+
+function calcNextTimed(curSec) {
+  const inc = curSec < 60 ? 15 : 30;
+  return curSec + inc;
 }
 
 // ══════════════════════════════════════════════════════════
@@ -1233,7 +1254,12 @@ async function loadWorkouts() {
     .select('*, exercises(*)')
     .eq('user_id', S.user.id)
     .order('created_at');
-  if (!error) S.workouts = data || [];
+  if (!error) {
+    (data || []).forEach(w => {
+      (w.exercises || []).sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+    });
+    S.workouts = data || [];
+  }
 }
 
 async function loadSessions() {
