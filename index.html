@@ -144,6 +144,14 @@
     .sex-name { font-size:0.95rem; font-weight:500; text-transform:uppercase; letter-spacing:0.06em; }
     .sex-target { font-size:0.7rem; color:var(--muted); }
     .sex-target em { color:var(--amber); font-style:normal; }
+    .reorder-mode .sex-block { display:flex; align-items:center; gap:12px; padding:14px 16px; background:var(--surface); border:1px solid var(--border2); border-radius:4px; margin:8px 0; }
+    .reorder-mode .sex-block > :not(.drag-handle):not(.reorder-name) { display:none; }
+    .reorder-mode .reorder-name { flex:1; font-size:0.95rem; font-weight:500; text-transform:uppercase; letter-spacing:0.06em; color:var(--white); }
+    .drag-handle { display:none; font-size:1.3rem; color:var(--muted2); cursor:grab; user-select:none; touch-action:none; padding:4px 6px; }
+    .reorder-mode .drag-handle { display:inline-block; }
+    .sex-block.dragging { opacity:0.4; }
+    .sex-block.drag-over { border-color:var(--amber); }
+    #btnReorder.active { color:var(--amber); border-color:var(--amber); }
 
     .outcome-row { display:flex; gap:7px; margin-bottom:8px; }
     .obtn {
@@ -375,7 +383,10 @@
 <div class="screen" id="s-session">
   <div class="app-header">
     <span class="logo" id="sessionTitle">—</span>
-    <button class="btn btn-ghost btn-sm" onclick="cancelSession()">← Back</button>
+    <div style="display:flex;gap:6px">
+      <button class="btn btn-ghost btn-sm" id="btnReorder" onclick="toggleReorderMode()">✎</button>
+      <button class="btn btn-ghost btn-sm" onclick="cancelSession()">← Back</button>
+    </div>
   </div>
   <div class="pane" id="sessionBody"></div>
   <div class="bottom-bar">
@@ -895,10 +906,104 @@ function startSession(workoutId) {
   const workout = S.workouts.find(w => w.id === workoutId);
   if (!workout) return;
   S.active = { workout, outcomes: {}, date: isoDate(new Date()) };
+  S.reorderMode = false;
+  const rb = document.getElementById('btnReorder');
+  if (rb) { rb.textContent = '✎'; rb.classList.remove('active'); }
+  document.getElementById('sessionBody').classList.remove('reorder-mode');
   document.getElementById('sessionTitle').textContent = workout.name;
   renderSession();
   show('s-session');
   updateSummary();
+}
+
+async function toggleReorderMode() {
+  if (!S.active) return;
+  S.reorderMode = !S.reorderMode;
+  const btn = document.getElementById('btnReorder');
+  const body = document.getElementById('sessionBody');
+  if (S.reorderMode) {
+    btn.textContent = 'Done';
+    btn.classList.add('active');
+    body.classList.add('reorder-mode');
+    renderSession();
+  } else {
+    btn.textContent = '✎';
+    btn.classList.remove('active');
+    body.classList.remove('reorder-mode');
+    await persistReorder();
+    renderSession();
+  }
+}
+
+let _dragBlock = null;
+
+function enableReorderDnd() {
+  const body = document.getElementById('sessionBody');
+  body.querySelectorAll('.sex-block').forEach(b => {
+    const handle = b.querySelector('.drag-handle');
+    if (!handle) return;
+    handle.addEventListener('pointerdown', e => startReorderDrag(e, b));
+  });
+}
+
+function startReorderDrag(e, block) {
+  e.preventDefault();
+  _dragBlock = block;
+  block.classList.add('dragging');
+  try { block.setPointerCapture(e.pointerId); } catch(_) {}
+  const move = ev => onReorderMove(ev, block);
+  const end  = () => {
+    block.classList.remove('dragging');
+    block.removeEventListener('pointermove', move);
+    block.removeEventListener('pointerup', end);
+    block.removeEventListener('pointercancel', end);
+    _dragBlock = null;
+  };
+  block.addEventListener('pointermove', move);
+  block.addEventListener('pointerup', end);
+  block.addEventListener('pointercancel', end);
+}
+
+function onReorderMove(e, block) {
+  const container = block.parentElement;
+  const y = e.clientY;
+  const siblings = Array.from(container.querySelectorAll('.sex-block')).filter(s => s !== block);
+  for (const sib of siblings) {
+    const rect = sib.getBoundingClientRect();
+    if (y < rect.top + rect.height / 2) {
+      container.insertBefore(block, sib);
+      return;
+    }
+  }
+  const last = siblings[siblings.length - 1];
+  if (last && last.nextSibling !== block) container.appendChild(block);
+}
+
+async function persistReorder() {
+  if (!S.active) return;
+  const workout = S.active.workout;
+  const ordered = Array.from(document.querySelectorAll('#sessionBody .sex-block'))
+    .map(b => b.dataset.exid)
+    .filter(Boolean);
+  if (!ordered.length) return;
+  const updates = [];
+  ordered.forEach((exid, idx) => {
+    const ex = workout.exercises.find(e => e.id === exid);
+    if (ex && ex.sort_order !== idx) {
+      ex.sort_order = idx;
+      updates.push({ id: ex.id, sort_order: idx });
+    }
+  });
+  if (!updates.length) return;
+  workout.exercises.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+  try {
+    for (const u of updates) {
+      await sb.from('exercises').update({ sort_order: u.sort_order }).eq('id', u.id);
+    }
+    toast('Order saved', 'ok');
+  } catch (e) {
+    toast('Error saving order: ' + e.message, 'err');
+  }
 }
 
 function renderSession() {
@@ -929,7 +1034,9 @@ function renderSession() {
           <input class="finput" type="number" id="ar-${ex.id}" value="${ex.reps}" inputmode="numeric"/>
         </div>`;
     return `
-      <div class="sex-block" id="sx-${ex.id}">
+      <div class="sex-block" id="sx-${ex.id}" data-exid="${ex.id}">
+        <span class="drag-handle" aria-label="Drag to reorder">⠿</span>
+        <span class="reorder-name">${ex.name}</span>
         <div class="sex-head">
           <span class="sex-name">${ex.name}</span>
           <span class="sex-target">Target: <em>${targetStr}</em></span>
@@ -950,6 +1057,7 @@ function renderSession() {
       </div>
     `;
   }).join('') + '<div class="gap"></div>';
+  if (S.reorderMode) enableReorderDnd();
 }
 
 function setOutcome(exId, outcome) {
@@ -1091,8 +1199,10 @@ async function finishSession() {
   }
 }
 
-function cancelSession() {
+async function cancelSession() {
   if (Object.keys(S.active?.outcomes || {}).length > 0 && !confirm('Discard this session?')) return;
+  if (S.reorderMode) await persistReorder();
+  S.reorderMode = false;
   S.active = null;
   show('s-app');
 }
